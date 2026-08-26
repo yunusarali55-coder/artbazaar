@@ -173,6 +173,8 @@ export default function Home() {
         </section>
 
       </main>
-    </div>
+    </div><Head>
+  <title>Efnan ArtBazaar - Dijital Sanat Pazaryeri</title>
+</Head>
   );
 }
