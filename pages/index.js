@@ -4,8 +4,8 @@ import { ethers } from 'ethers';
 
 export default function Home() {
   // --- ÜYELİK VE OTURUM STATE'LERİ ---
-  const [currentUser, setCurrentUser] = useState(null); // Giriş yapan kullanıcı bilgisi
-  const [authMode, setAuthMode] = useState('login'); // 'login' veya 'register'
+  const [currentUser, setCurrentUser] = useState(null);
+  const [authMode, setAuthMode] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
@@ -17,20 +17,24 @@ export default function Home() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [duration, setDuration] = useState('1'); 
-  const [priceEth, setPriceEth] = useState('0.003'); // 300 TL bazlı başlangıç tahmini
+  const [priceEth, setPriceEth] = useState('0.003');
   const [imageFile, setImageFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [selectedArt, setSelectedArt] = useState(null);
+
+  // --- ÖDEME YÖNTEMİ SEÇİM MODALI STATE'LERİ ---
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [pendingActionType, setPendingActionType] = useState(null); // 'listing' veya 'buy'
+  const [pendingArtData, setPendingArtData] = useState(null); // Satın alınacak eser bilgisi
 
   const [listings, setListings] = useState([
     { id: 1, title: 'Cyber Mona Lisa', description: 'Yapay zeka ve rönesans sanatının dijital sentezi.', artist: '0x123...ABCD', price: '0.04 ETH', duration: '3 Ay', image: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=500&auto=format&fit=crop&q=60' },
     { id: 2, title: 'Abstract Neon', description: 'Geleceğin sokak kültüründen ilham alan neon kompozisyon.', artist: '0x987...WXYZ', price: '0.004 ETH', duration: '1 Ay', image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60' }
   ]);
 
-  // Senin Kişisel Cüzdan Adresin (Ödemelerin ve %10 komisyonların aktarılacağı adres)
+  // Senin Kişisel Cüzdan Adresin
   const platformWalletAddress = "0xAd58d1050942F795E651153231Ce8A152180C055";
 
-  // Sayfa açıldığında daha önce giriş yapmış kullanıcı var mı kontrol et
   useEffect(() => {
     const savedUser = localStorage.getItem('efnan_user');
     if (savedUser) {
@@ -38,7 +42,6 @@ export default function Home() {
     }
   }, []);
 
-  // Canlı ETH kurunu çekip 300 TL bazlı fiyatı hesaplayan fonksiyon
   useEffect(() => {
     async function calculatePrices() {
       try {
@@ -46,7 +49,7 @@ export default function Home() {
         const data = await res.json();
         const ethTryRate = data.ethereum.try || 118000; 
 
-        let targetTry = 300; // 1 Ay
+        let targetTry = 300;
         if (duration === '3') targetTry = 850;
         if (duration === '6') targetTry = 1600;
 
@@ -62,7 +65,6 @@ export default function Home() {
     calculatePrices();
   }, [duration]);
 
-  // --- ÜYELİK FONKSİYONLARI ---
   const handleRegister = (e) => {
     e.preventDefault();
     if (!email || !password || !username) {
@@ -82,7 +84,6 @@ export default function Home() {
       alert('Lütfen e-posta ve şifrenizi girin.');
       return;
     }
-    // Basit simülasyon giriş
     const existingUser = { username: email.split('@')[0], email };
     localStorage.setItem('efnan_user', JSON.stringify(existingUser));
     setCurrentUser(existingUser);
@@ -97,7 +98,6 @@ export default function Home() {
     alert('Çıkış yapıldı.');
   };
 
-  // --- WEB3 CÜZDAN BAĞLAMA ---
   const connectWallet = async () => {
     if (typeof window.ethereum !== 'undefined') {
       try {
@@ -120,29 +120,40 @@ export default function Home() {
     }
   };
 
-  const handleDurationChange = (e) => {
-    setDuration(e.target.value);
-  };
-
-  // --- ESER LİSTELEME VE ÖDEME ---
-  const handleSubmit = async (e) => {
+  // --- ÖDEME SÜRECİNİ BAŞLATAN TETİKLEYİCİLER ---
+  const triggerListingProcess = (e) => {
     e.preventDefault();
-
     if (!currentUser) {
       alert('Eser listelemek için önce üye girişi yapmalısınız!');
       setShowAuthModal(true);
       return;
     }
-
     if (!imageFile) {
       alert('Lütfen yüklenecek bir eser görseli seçin!');
       return;
     }
+    // Ödeme yöntemi seçim modalını aç
+    setPendingActionType('listing');
+    setShowPaymentModal(true);
+  };
 
+  const triggerBuyProcess = (art) => {
+    if (!currentUser) {
+      alert('Satın alma yapabilmek için önce üye girişi yapmalısınız!');
+      setShowAuthModal(true);
+      return;
+    }
+    setPendingArtData(art);
+    setPendingActionType('buy');
+    setShowPaymentModal(true);
+  };
+
+  // --- 1. SEÇENEK: METAMASK İLE OTOMATİK ÖDEME ---
+  const payWithMetaMask = async () => {
+    setShowPaymentModal(false);
     setUploading(true);
 
     try {
-      // İşlem anında cüzdan bağlı değilse cüzdanı iste
       let currentAccount = account;
       if (!currentAccount) {
         currentAccount = await connectWallet();
@@ -154,77 +165,86 @@ export default function Home() {
 
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
-      const weiAmount = ethers.utils.parseEther(priceEth);
 
-      alert(`Listeleme ücreti (${priceEth} ETH) ödemesi için cüzdanınız açılıyor...`);
+      if (pendingActionType === 'listing') {
+        const weiAmount = ethers.utils.parseEther(priceEth);
+        alert(`Listeleme ücreti (${priceEth} ETH) ödemesi için MetaMask açılıyor...`);
 
-      const tx = await signer.sendTransaction({
-        to: platformWalletAddress,
-        value: weiAmount,
-      });
+        const tx = await signer.sendTransaction({
+          to: platformWalletAddress,
+          value: weiAmount,
+        });
+        await tx.wait();
 
-      await tx.wait();
+        const imageUrl = URL.createObjectURL(imageFile);
+        const newListing = {
+          id: listings.length + 1,
+          title: title,
+          description: description || 'Sanatçı tarafından açıklama girilmedi.',
+          artist: `${currentAccount.substring(0, 6)}...${currentAccount.substring(38)}`,
+          price: `${(parseFloat(priceEth) * 2).toFixed(3)} ETH`, 
+          duration: `${duration} Ay`,
+          image: imageUrl
+        };
 
+        setListings([newListing, ...listings]);
+        alert(`Ödeme başarılı! Eseriniz başarıyla ${duration} aylığına Efnan ArtBazaar'da listelendi!`);
+        setTitle('');
+        setDescription('');
+        setImageFile(null);
+
+      } else if (pendingActionType === 'buy' && pendingArtData) {
+        const numericPrice = parseFloat(pendingArtData.price.replace(' ETH', '')) || 0.01;
+        const totalWei = ethers.utils.parseEther(numericPrice.toString());
+        const commissionWei = totalWei.mul(10).div(100); // %10 Komisyon
+
+        alert(`${pendingArtData.title} için ödeme yapılıyor. %10 platform komisyonu cüzdanınıza aktarılıyor...`);
+
+        const txPlatform = await signer.sendTransaction({
+          to: platformWalletAddress,
+          value: commissionWei,
+        });
+        await txPlatform.wait();
+
+        alert(`Tebrikler! ${pendingArtData.title} başarıyla satın alındı.`);
+      }
+    } catch (error) {
+      console.error('MetaMask ödeme hatası:', error);
+      alert('İşlem iptal edildi veya bir hata oluştu.');
+    } finally {
+      setUploading(false);
+      setPendingActionType(null);
+      setPendingArtData(null);
+    }
+  };
+
+  // --- 2. SEÇENEK: BİNANCE / BORSALAR İÇİN MANUEL ONAY ---
+  const confirmManualExchangePayment = () => {
+    setShowPaymentModal(false);
+
+    if (pendingActionType === 'listing') {
       const imageUrl = URL.createObjectURL(imageFile);
       const newListing = {
         id: listings.length + 1,
         title: title,
         description: description || 'Sanatçı tarafından açıklama girilmedi.',
-        artist: `${currentAccount.substring(0, 6)}...${currentAccount.substring(38)}`,
+        artist: `${currentUser.username} (Borsa)`,
         price: `${(parseFloat(priceEth) * 2).toFixed(3)} ETH`, 
         duration: `${duration} Ay`,
         image: imageUrl
       };
 
       setListings([newListing, ...listings]);
-      alert(`Ödeme başarılı! Eseriniz başarıyla ${duration} aylığına Efnan ArtBazaar'da listelendi!`);
-      
+      alert('Borsa transferi bildirimi alındı! Transferiniz yönetici cüzdanında onaylandığında eseriniz öne çıkanlarda sergilenecektir.');
       setTitle('');
       setDescription('');
       setImageFile(null);
-    } catch (error) {
-      console.error('Ödeme veya yükleme hatası:', error);
-      alert('İşlem iptal edildi veya bir hata oluştu.');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  // --- SATIN ALMA VE %10 KOMİSYON ---
-  const buyArt = async (artTitle, artPriceStr) => {
-    if (!currentUser) {
-      alert('Satın alma yapabilmek için önce üye girişi yapmalısınız!');
-      setShowAuthModal(true);
-      return;
+    } else if (pendingActionType === 'buy' && pendingArtData) {
+      alert(`"${pendingArtData.title}" için borsa transfer bildiriminiz alındı! Kontrol edildikten sonra eser sahipliği size aktarılacaktır.`);
     }
 
-    let currentAccount = account;
-    if (!currentAccount) {
-      currentAccount = await connectWallet();
-      if (!currentAccount) return;
-    }
-
-    try {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-
-      const numericPrice = parseFloat(artPriceStr.replace(' ETH', '')) || 0.01;
-      const totalWei = ethers.utils.parseEther(numericPrice.toString());
-      const commissionWei = totalWei.mul(10).div(100); // %10 Komisyon
-
-      alert(`${artTitle} için ödeme yapılıyor. %10 platform komisyonu otomatik olarak yönetici hesabınıza aktarılacak.`);
-
-      const txPlatform = await signer.sendTransaction({
-        to: platformWalletAddress,
-        value: commissionWei,
-      });
-      await txPlatform.wait();
-
-      alert(`Tebrikler! ${artTitle} başarıyla satın alındı.`);
-    } catch (error) {
-      console.error('Satın alma hatası:', error);
-      alert('Satın alma işlemi başarısız oldu veya iptal edildi.');
-    }
+    setPendingActionType(null);
+    setPendingArtData(null);
   };
 
   return (
@@ -267,14 +287,14 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* İÇERİK */}
+      {/* ANA İÇERİK */}
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px' }}>
         <div style={{ textAlign: 'center', marginBottom: '50px' }}>
           <h1 style={{ fontSize: '2.5rem', color: '#111827', marginBottom: '10px' }}>Efnan ArtBazaar'a Hoş Geldiniz</h1>
-          <p style={{ color: '#4b5563', fontSize: '1.1rem' }}>Eşsiz dijital sanat eserlerini üye olarak keşfedin, cüzdan derdi olmadan gezinin, alım-satım yapın.</p>
+          <p style={{ color: '#4b5563', fontSize: '1.1rem' }}>Eşsiz dijital sanat eserlerini keşfedin, dilediğiniz ödeme yöntemiyle güvenle işlem yapın.</p>
         </div>
 
-        {/* KEŞFET BÖLÜMÜ (Herkes Gezebilir) */}
+        {/* KEŞFET */}
         <section style={{ marginBottom: '60px' }}>
           <h2 style={{ fontSize: '1.75rem', marginBottom: '20px', color: '#1f2937', borderBottom: '2px solid #e5e7eb', paddingBottom: '10px' }}>Keşfet & Satın Al</h2>
           
@@ -292,7 +312,7 @@ export default function Home() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
                     <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#059669' }}>{art.price}</span>
                     <button 
-                      onClick={(e) => { e.stopPropagation(); buyArt(art.title, art.price); }}
+                      onClick={(e) => { e.stopPropagation(); triggerBuyProcess(art); }}
                       style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
                     >
                       Satın Al
@@ -311,7 +331,7 @@ export default function Home() {
             Eserinizi aylık süre seçenekleriyle (300 TL bazlı) pazaryerinde sergileyin.
           </p>
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <form onSubmit={triggerListingProcess} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
               <label style={{ display: 'block', fontWeight: '500', marginBottom: '6px', color: '#374151' }}>Eser Adı</label>
               <input 
@@ -339,7 +359,7 @@ export default function Home() {
               <label style={{ display: 'block', fontWeight: '500', marginBottom: '6px', color: '#374151' }}>Listeleme Süresi ve Ücreti</label>
               <select 
                 value={duration} 
-                onChange={handleDurationChange}
+                onChange={(e) => setDuration(e.target.value)}
                 style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: 'white' }}
               >
                 <option value="1">1 Ay (~300 TL karşılığı ETH)</option>
@@ -364,11 +384,56 @@ export default function Home() {
               disabled={uploading}
               style={{ backgroundColor: uploading ? '#9ca3af' : '#059669', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontSize: '1rem', fontWeight: 'bold', cursor: uploading ? 'not-allowed' : 'pointer', marginTop: '10px' }}
             >
-              {uploading ? 'Yükleniyor & Ödeniyor...' : `Listeleme Ücreti Öde (~${priceEth} ETH) ve Yayınla`}
+              {uploading ? 'İşlem Yapılıyor...' : `Ödeme Yöntemi Seç ve Yayınla (~${priceEth} ETH)`}
             </button>
           </form>
         </section>
       </main>
+
+      {/* --- ÖDEME YÖNTEMİ SEÇİM MODALI (YENİ) --- */}
+      {showPaymentModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1100, padding: '20px' }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '16px', maxWidth: '450px', width: '100%', padding: '30px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ fontSize: '1.25rem', color: '#111827', fontWeight: 'bold' }}>Ödeme Yöntemi Seçin</h2>
+              <button onClick={() => setShowPaymentModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+            </div>
+
+            <p style={{ fontSize: '0.9rem', color: '#6b7280', marginBottom: '20px' }}>
+              Lütfen ödemeyi yapmak istediğiniz yöntemi seçin:
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {/* SEÇENEK 1: MetaMask / Web3 Cüzdan */}
+              <button 
+                onClick={payWithMetaMask}
+                style={{ backgroundColor: '#f59e0b', color: 'white', border: 'none', padding: '14px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '1rem' }}
+              >
+                🦊 MetaMask / Web3 Cüzdan ile Otomatik Öde
+              </button>
+
+              {/* SEÇENEK 2: Binance / Borsalar */}
+              <div style={{ border: '1px solid #e5e7eb', borderRadius: '10px', padding: '14px', backgroundColor: '#f9fafb' }}>
+                <p style={{ fontWeight: 'bold', color: '#1f2937', marginBottom: '6px', fontSize: '0.95rem' }}>
+                  📊 Binance / Paribu / Diğer Borsalar ile Öde
+                </p>
+                <p style={{ fontSize: '0.8rem', color: '#4b5563', marginBottom: '10px' }}>
+                  Aşağıdaki kişisel cüzdan adresimize borsanızdan transfer yapın:
+                </p>
+                <div style={{ backgroundColor: 'white', padding: '8px', borderRadius: '6px', border: '1px dashed #d1d5db', fontSize: '0.75rem', wordBreak: 'break-all', fontWeight: 'mono', color: '#374151', marginBottom: '10px' }}>
+                  {platformWalletAddress}
+                </div>
+                <button 
+                  onClick={confirmManualExchangePayment}
+                  style={{ width: '100%', backgroundColor: '#2563eb', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem' }}
+                >
+                  Borsadan Transferi Yaptım, Bildir
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* GİRİŞ / ÜYE OL MODALI */}
       {showAuthModal && (
@@ -457,10 +522,10 @@ export default function Home() {
                     Kapat
                   </button>
                   <button 
-                    onClick={() => { buyArt(selectedArt.title, selectedArt.price); setSelectedArt(null); }}
+                    onClick={() => { triggerBuyProcess(selectedArt); setSelectedArt(null); }}
                     style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
                   >
-                    Hemen Satın Al
+                    Satın Al (Ödeme Seç)
                   </button>
                 </div>
               </div>
