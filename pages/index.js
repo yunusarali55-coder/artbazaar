@@ -10,9 +10,12 @@ export default function Home() {
   const [price, setPrice] = useState('0.004'); 
   const [imageFile, setImageFile] = useState(null);
 
+  // Platform sahibinin kişisel ETH cüzdan adresi (İleride kendi MetaMask adresini buraya yazabilirsin)
+  const ADMIN_ETH_WALLET = "0xSeninKisiselEthCüzdanAdresinBurayaGelecek";
+
   const [listings, setListings] = useState([
     { id: 1, title: 'Cyber Mona Lisa', artist: '0x123...ABCD', price: '0.04 ETH', duration: '3 Ay', image: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=500&auto=format&fit=crop&q=60' },
-    { id: 2, title: 'Abstract Neon', artist: '0x987...WXYZ', price: '0.02 ETH', duration: '1 Ay', image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60' }
+    { id: 2, title: 'Abstract Neon', artist: '0x987...WXYZ', price: '0.004 ETH', duration: '1 Ay', image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60' }
   ]);
 
   const connectWallet = async () => {
@@ -43,7 +46,12 @@ export default function Home() {
       alert('Lütfen önce cüzdanınızı bağlayın!');
       return;
     }
-    alert(`Eser başarıyla sisteme yüklendi ve vitrine eklendi! Seçilen süre: ${duration} Ay.`);
+    
+    alert(`Eser başarıyla işleme alındı!\n\nSeçilen Süre: ${duration} Ay\nÖdenecek Tutar: ${price} ETH\n\n(Not: İleride gerçek akıllı kontrat bağlandığında ödeme otomatik olarak cüzdanınıza aktarılacaktır.)`);
+    
+    setTitle('');
+    setDescription('');
+    setImageFile(null);
   };
 
   const buyArt = (artTitle, artPrice) => {
@@ -58,6 +66,7 @@ export default function Home() {
     <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', fontFamily: 'sans-serif' }}>
       <Head>
         <title>Efnan ArtBazaar - Dijital Sanat Pazaryeri</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
 
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 2rem', backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', position: 'sticky', top: 0, zIndex: 10 }}>
@@ -135,7 +144,7 @@ export default function Home() {
             </div>
 
             <div>
-              <label style={{ display: 'block', fontWeight: '500', marginBottom: '6px', color: '#374151' }}>Listeleme Süresi (Aylık)</label>
+              <label style={{ display: 'block', fontWeight: '500', marginBottom: '6px', color: '#374151' }}>Listeleme Süresi ve Ücreti (ETH)</label>
               <select 
                 value={duration} 
                 onChange={handleDurationChange}
@@ -162,7 +171,7 @@ export default function Home() {
               type="submit"
               style={{ backgroundColor: '#059669', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}
             >
-              Listeleme Ücretini Öde ({price} ETH) dan Yayınla
+              Listeleme Ücretini Öde ({price} ETH) ve Yayınla
             </button>
           </form>
         </section>
