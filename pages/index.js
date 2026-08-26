@@ -3,6 +3,15 @@ import Head from 'next/head';
 import { ethers } from 'ethers';
 
 export default function Home() {
+  // --- ÜYELİK VE OTURUM STATE'LERİ ---
+  const [currentUser, setCurrentUser] = useState(null); // Giriş yapan kullanıcı bilgisi
+  const [authMode, setAuthMode] = useState('login'); // 'login' veya 'register'
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  // --- WEB3 VE PAZARYERİ STATE'LERİ ---
   const [account, setAccount] = useState('');
   const [balance, setBalance] = useState('');
   const [title, setTitle] = useState('');
@@ -11,8 +20,6 @@ export default function Home() {
   const [priceEth, setPriceEth] = useState('0.003'); // 300 TL bazlı başlangıç tahmini
   const [imageFile, setImageFile] = useState(null);
   const [uploading, setUploading] = useState(false);
-  
-  // Seçilen eserin detayını göstermek için modal state'i
   const [selectedArt, setSelectedArt] = useState(null);
 
   const [listings, setListings] = useState([
@@ -23,6 +30,14 @@ export default function Home() {
   // Senin Kişisel Cüzdan Adresin (Ödemelerin ve %10 komisyonların aktarılacağı adres)
   const platformWalletAddress = "0xAd58d1050942F795E651153231Ce8A152180C055";
 
+  // Sayfa açıldığında daha önce giriş yapmış kullanıcı var mı kontrol et
+  useEffect(() => {
+    const savedUser = localStorage.getItem('efnan_user');
+    if (savedUser) {
+      setCurrentUser(JSON.parse(savedUser));
+    }
+  }, []);
+
   // Canlı ETH kurunu çekip 300 TL bazlı fiyatı hesaplayan fonksiyon
   useEffect(() => {
     async function calculatePrices() {
@@ -31,8 +46,7 @@ export default function Home() {
         const data = await res.json();
         const ethTryRate = data.ethereum.try || 118000; 
 
-        // Sürelere göre TL fiyatları: 1 Ay = 300 TL, 3 Ay = 850 TL, 6 Ay = 1600 TL
-        let targetTry = 300;
+        let targetTry = 300; // 1 Ay
         if (duration === '3') targetTry = 850;
         if (duration === '6') targetTry = 1600;
 
@@ -48,6 +62,42 @@ export default function Home() {
     calculatePrices();
   }, [duration]);
 
+  // --- ÜYELİK FONKSİYONLARI ---
+  const handleRegister = (e) => {
+    e.preventDefault();
+    if (!email || !password || !username) {
+      alert('Lütfen tüm alanları doldurun.');
+      return;
+    }
+    const newUser = { username, email };
+    localStorage.setItem('efnan_user', JSON.stringify(newUser));
+    setCurrentUser(newUser);
+    setShowAuthModal(false);
+    alert('Kayıt başarılı! Hoş geldiniz.');
+  };
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (!email || !password) {
+      alert('Lütfen e-posta ve şifrenizi girin.');
+      return;
+    }
+    // Basit simülasyon giriş
+    const existingUser = { username: email.split('@')[0], email };
+    localStorage.setItem('efnan_user', JSON.stringify(existingUser));
+    setCurrentUser(existingUser);
+    setShowAuthModal(false);
+    alert('Başarıyla giriş yapıldı!');
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('efnan_user');
+    setCurrentUser(null);
+    setAccount('');
+    alert('Çıkış yapıldı.');
+  };
+
+  // --- WEB3 CÜZDAN BAĞLAMA ---
   const connectWallet = async () => {
     if (typeof window.ethereum !== 'undefined') {
       try {
@@ -65,7 +115,7 @@ export default function Home() {
         return null;
       }
     } else {
-      alert('Lütfen MetaMask veya uyumlu bir Web3 cüzdanı yükleyin!');
+      alert('Lütfen tarayıcınızda veya MetaMask uygulamasında bir Web3 cüzdanı kullanın!');
       return null;
     }
   };
@@ -74,9 +124,15 @@ export default function Home() {
     setDuration(e.target.value);
   };
 
-  // Eser Listeleme ve 300 TL+ Bazlı Ücret Ödeme İşlemi
+  // --- ESER LİSTELEME VE ÖDEME ---
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!currentUser) {
+      alert('Eser listelemek için önce üye girişi yapmalısınız!');
+      setShowAuthModal(true);
+      return;
+    }
 
     if (!imageFile) {
       alert('Lütfen yüklenecek bir eser görseli seçin!');
@@ -86,6 +142,7 @@ export default function Home() {
     setUploading(true);
 
     try {
+      // İşlem anında cüzdan bağlı değilse cüzdanı iste
       let currentAccount = account;
       if (!currentAccount) {
         currentAccount = await connectWallet();
@@ -97,10 +154,9 @@ export default function Home() {
 
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
-
       const weiAmount = ethers.utils.parseEther(priceEth);
 
-      alert(`Listeleme ücreti (${priceEth} ETH) için cüzdanınızda onay penceresi açılıyor...`);
+      alert(`Listeleme ücreti (${priceEth} ETH) ödemesi için cüzdanınız açılıyor...`);
 
       const tx = await signer.sendTransaction({
         to: platformWalletAddress,
@@ -110,7 +166,6 @@ export default function Home() {
       await tx.wait();
 
       const imageUrl = URL.createObjectURL(imageFile);
-
       const newListing = {
         id: listings.length + 1,
         title: title,
@@ -122,7 +177,6 @@ export default function Home() {
       };
 
       setListings([newListing, ...listings]);
-
       alert(`Ödeme başarılı! Eseriniz başarıyla ${duration} aylığına Efnan ArtBazaar'da listelendi!`);
       
       setTitle('');
@@ -136,8 +190,14 @@ export default function Home() {
     }
   };
 
-  // Satın Alma ve %10 Komisyonu Otomatik Aktarma İşlemi
+  // --- SATIN ALMA VE %10 KOMİSYON ---
   const buyArt = async (artTitle, artPriceStr) => {
+    if (!currentUser) {
+      alert('Satın alma yapabilmek için önce üye girişi yapmalısınız!');
+      setShowAuthModal(true);
+      return;
+    }
+
     let currentAccount = account;
     if (!currentAccount) {
       currentAccount = await connectWallet();
@@ -150,11 +210,9 @@ export default function Home() {
 
       const numericPrice = parseFloat(artPriceStr.replace(' ETH', '')) || 0.01;
       const totalWei = ethers.utils.parseEther(numericPrice.toString());
+      const commissionWei = totalWei.mul(10).div(100); // %10 Komisyon
 
-      // %10 Komisyon hesabı
-      const commissionWei = totalWei.mul(10).div(100); 
-
-      alert(`${artTitle} için ödeme yapılıyor. %10 platform komisyonu otomatik olarak yönetici hesabına aktarılacak.`);
+      alert(`${artTitle} için ödeme yapılıyor. %10 platform komisyonu otomatik olarak yönetici hesabınıza aktarılacak.`);
 
       const txPlatform = await signer.sendTransaction({
         to: platformWalletAddress,
@@ -176,32 +234,47 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
 
+      {/* ÜST MENÜ */}
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 2rem', backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', position: 'sticky', top: 0, zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.25rem', fontWeight: 'bold', color: '#1f2937' }}>
           <span>🎨</span> Efnan ArtBazaar
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {currentUser ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '0.9rem', color: '#374151', fontWeight: '500' }}>👤 {currentUser.username}</span>
+              <button 
+                onClick={handleLogout}
+                style={{ backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem' }}
+              >
+                Çıkış
+              </button>
+            </div>
+          ) : (
+            <button 
+              onClick={() => setShowAuthModal(true)}
+              style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+            >
+              Giriş Yap / Üye Ol
+            </button>
+          )}
+
           {account && (
-            <span style={{ fontSize: '0.9rem', backgroundColor: '#eef2ff', color: '#4f46e5', padding: '6px 12px', borderRadius: '20px', fontWeight: '600' }}>
+            <span style={{ fontSize: '0.85rem', backgroundColor: '#eef2ff', color: '#4f46e5', padding: '6px 10px', borderRadius: '20px', fontWeight: '600' }}>
               💎 {balance} ETH
             </span>
           )}
-          <button 
-            onClick={connectWallet}
-            style={{ backgroundColor: '#4f46e5', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
-          >
-            {account ? `${account.substring(0, 6)}...${account.substring(38)}` : 'Cüzdan Bağla'}
-          </button>
         </div>
       </nav>
 
+      {/* İÇERİK */}
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px' }}>
-        
         <div style={{ textAlign: 'center', marginBottom: '50px' }}>
           <h1 style={{ fontSize: '2.5rem', color: '#111827', marginBottom: '10px' }}>Efnan ArtBazaar'a Hoş Geldiniz</h1>
-          <p style={{ color: '#4b5563', fontSize: '1.1rem' }}>Eşsiz dijital sanat eserlerini keşfedin, satın alın veya kendi eserlerinizi aylık periyotlarla sergileyin.</p>
+          <p style={{ color: '#4b5563', fontSize: '1.1rem' }}>Eşsiz dijital sanat eserlerini üye olarak keşfedin, cüzdan derdi olmadan gezinin, alım-satım yapın.</p>
         </div>
 
+        {/* KEŞFET BÖLÜMÜ (Herkes Gezebilir) */}
         <section style={{ marginBottom: '60px' }}>
           <h2 style={{ fontSize: '1.75rem', marginBottom: '20px', color: '#1f2937', borderBottom: '2px solid #e5e7eb', paddingBottom: '10px' }}>Keşfet & Satın Al</h2>
           
@@ -231,6 +304,7 @@ export default function Home() {
           </div>
         </section>
 
+        {/* ESER LİSTELEME FORMU */}
         <section style={{ maxWidth: '600px', margin: '0 auto', backgroundColor: 'white', padding: '30px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
           <h2 style={{ fontSize: '1.5rem', marginBottom: '8px', color: '#111827' }}>Kendi Eserini Listele</h2>
           <p style={{ color: '#6b7280', marginBottom: '24px', fontSize: '0.95rem' }}>
@@ -294,10 +368,74 @@ export default function Home() {
             </button>
           </form>
         </section>
-
       </main>
 
-      {/* Eser Detay Modalı */}
+      {/* GİRİŞ / ÜYE OL MODALI */}
+      {showAuthModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '16px', maxWidth: '400px', width: '100%', padding: '30px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ fontSize: '1.25rem', color: '#111827' }}>{authMode === 'login' ? 'Giriş Yap' : 'Üye Ol'}</h2>
+              <button onClick={() => setShowAuthModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+            </div>
+
+            <form onSubmit={authMode === 'login' ? handleLogin : handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {authMode === 'register' && (
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '500', marginBottom: '4px', color: '#374151' }}>Kullanıcı Adı</label>
+                  <input 
+                    type="text" 
+                    value={username} 
+                    onChange={(e) => setUsername(e.target.value)} 
+                    placeholder="Adınız" 
+                    required 
+                    style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} 
+                  />
+                </div>
+              )}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '500', marginBottom: '4px', color: '#374151' }}>E-posta Adresi</label>
+                <input 
+                  type="email" 
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)} 
+                  placeholder="ornek@mail.com" 
+                  required 
+                  style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} 
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '500', marginBottom: '4px', color: '#374151' }}>Şifre</label>
+                <input 
+                  type="password" 
+                  value={password} 
+                  onChange={(e) => setPassword(e.target.value)} 
+                  placeholder="••••••••" 
+                  required 
+                  style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} 
+                />
+              </div>
+
+              <button 
+                type="submit"
+                style={{ backgroundColor: '#4f46e5', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}
+              >
+                {authMode === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}
+              </button>
+            </form>
+
+            <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '0.9rem' }}>
+              {authMode === 'login' ? (
+                <p>Hesabınız yok mu? <span onClick={() => setAuthMode('register')} style={{ color: '#4f46e5', cursor: 'pointer', fontWeight: 'bold' }}>Üye Olun</span></p>
+              ) : (
+                <p>Zaten hesabınız var mı? <span onClick={() => setAuthMode('login')} style={{ color: '#4f46e5', cursor: 'pointer', fontWeight: 'bold' }}>Giriş Yapın</span></p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ESER DETAY MODALI */}
       {selectedArt && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100, padding: '20px' }}>
           <div style={{ backgroundColor: 'white', borderRadius: '16px', maxWidth: '500px', width: '100%', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
