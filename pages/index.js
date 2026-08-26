@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { ethers } from 'ethers';
 
@@ -8,7 +8,7 @@ export default function Home() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [duration, setDuration] = useState('1'); 
-  const [price, setPrice] = useState('0.004'); 
+  const [priceEth, setPriceEth] = useState('0.003'); // 300 TL bazlı başlangıç tahmini
   const [imageFile, setImageFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   
@@ -20,6 +20,34 @@ export default function Home() {
     { id: 2, title: 'Abstract Neon', description: 'Geleceğin sokak kültüründen ilham alan neon kompozisyon.', artist: '0x987...WXYZ', price: '0.004 ETH', duration: '1 Ay', image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60' }
   ]);
 
+  // Senin Kişisel Cüzdan Adresin (Ödemelerin ve %10 komisyonların aktarılacağı adres)
+  const platformWalletAddress = "0xAd58d1050942F795E651153231Ce8A152180C055";
+
+  // Canlı ETH kurunu çekip 300 TL bazlı fiyatı hesaplayan fonksiyon
+  useEffect(() => {
+    async function calculatePrices() {
+      try {
+        const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=try');
+        const data = await res.json();
+        const ethTryRate = data.ethereum.try || 118000; 
+
+        // Sürelere göre TL fiyatları: 1 Ay = 300 TL, 3 Ay = 850 TL, 6 Ay = 1600 TL
+        let targetTry = 300;
+        if (duration === '3') targetTry = 850;
+        if (duration === '6') targetTry = 1600;
+
+        const calculatedEth = (targetTry / ethTryRate).toFixed(4);
+        setPriceEth(calculatedEth);
+      } catch (err) {
+        console.error("Kur çekilemedi, varsayılan değer kullanılıyor.", err);
+        if (duration === '1') setPriceEth('0.003');
+        else if (duration === '3') setPriceEth('0.008');
+        else if (duration === '6') setPriceEth('0.015');
+      }
+    }
+    calculatePrices();
+  }, [duration]);
+
   const connectWallet = async () => {
     if (typeof window.ethereum !== 'undefined') {
       try {
@@ -28,32 +56,27 @@ export default function Home() {
         const userAccount = accounts[0];
         setAccount(userAccount);
 
-        // Kullanıcının ETH bakiyesini çek
         const rawBalance = await provider.getBalance(userAccount);
         const ethBalance = ethers.utils.formatEther(rawBalance);
         setBalance(parseFloat(ethBalance).toFixed(4));
+        return userAccount;
       } catch (error) {
         console.error('Cüzdan bağlantı hatası:', error);
+        return null;
       }
     } else {
       alert('Lütfen MetaMask veya uyumlu bir Web3 cüzdanı yükleyin!');
+      return null;
     }
   };
 
   const handleDurationChange = (e) => {
-    const val = e.target.value;
-    setDuration(val);
-    if (val === '1') setPrice('0.004');
-    else if (val === '3') setPrice('0.010');
-    else if (val === '6') setPrice('0.018');
+    setDuration(e.target.value);
   };
 
+  // Eser Listeleme ve 300 TL+ Bazlı Ücret Ödeme İşlemi
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!account) {
-      alert('Lütfen önce cüzdanınızı bağlayın!');
-      return;
-    }
 
     if (!imageFile) {
       alert('Lütfen yüklenecek bir eser görseli seçin!');
@@ -63,39 +86,87 @@ export default function Home() {
     setUploading(true);
 
     try {
+      let currentAccount = account;
+      if (!currentAccount) {
+        currentAccount = await connectWallet();
+        if (!currentAccount) {
+          setUploading(false);
+          return;
+        }
+      }
+
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+
+      const weiAmount = ethers.utils.parseEther(priceEth);
+
+      alert(`Listeleme ücreti (${priceEth} ETH) için cüzdanınızda onay penceresi açılıyor...`);
+
+      const tx = await signer.sendTransaction({
+        to: platformWalletAddress,
+        value: weiAmount,
+      });
+
+      await tx.wait();
+
       const imageUrl = URL.createObjectURL(imageFile);
 
       const newListing = {
         id: listings.length + 1,
         title: title,
         description: description || 'Sanatçı tarafından açıklama girilmedi.',
-        artist: `${account.substring(0, 6)}...${account.substring(38)}`,
-        price: `${price} ETH`,
+        artist: `${currentAccount.substring(0, 6)}...${currentAccount.substring(38)}`,
+        price: `${(parseFloat(priceEth) * 2).toFixed(3)} ETH`, 
         duration: `${duration} Ay`,
         image: imageUrl
       };
 
       setListings([newListing, ...listings]);
 
-      alert(`Tebrikler! Eseriniz başarıyla ${duration} aylığına Efnan ArtBazaar'da listelendi!`);
+      alert(`Ödeme başarılı! Eseriniz başarıyla ${duration} aylığına Efnan ArtBazaar'da listelendi!`);
       
       setTitle('');
       setDescription('');
       setImageFile(null);
     } catch (error) {
-      console.error('Yükleme hatası:', error);
-      alert('Eser yüklenirken bir hata oluştu.');
+      console.error('Ödeme veya yükleme hatası:', error);
+      alert('İşlem iptal edildi veya bir hata oluştu.');
     } finally {
       setUploading(false);
     }
   };
 
-  const buyArt = (artTitle, artPrice) => {
-    if (!account) {
-      alert('Satın almak için lütfen önce cüzdanınızı bağlayın!');
-      return;
+  // Satın Alma ve %10 Komisyonu Otomatik Aktarma İşlemi
+  const buyArt = async (artTitle, artPriceStr) => {
+    let currentAccount = account;
+    if (!currentAccount) {
+      currentAccount = await connectWallet();
+      if (!currentAccount) return;
     }
-    alert(`${artTitle} adlı eser için ${artPrice} ödeme işlemi akıllı kontrat üzerinden başlatılıyor...`);
+
+    try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+
+      const numericPrice = parseFloat(artPriceStr.replace(' ETH', '')) || 0.01;
+      const totalWei = ethers.utils.parseEther(numericPrice.toString());
+
+      // %10 Komisyon hesabı
+      const commissionWei = totalWei.mul(10).div(100); 
+
+      alert(`${artTitle} için ödeme yapılıyor. %10 platform komisyonu otomatik olarak yönetici hesabına aktarılacak.`);
+
+      const txPlatform = await signer.sendTransaction({
+        to: platformWalletAddress,
+        value: commissionWei,
+      });
+      await txPlatform.wait();
+
+      alert(`Tebrikler! ${artTitle} başarıyla satın alındı.`);
+    } catch (error) {
+      console.error('Satın alma hatası:', error);
+      alert('Satın alma işlemi başarısız oldu veya iptal edildi.');
+    }
   };
 
   return (
@@ -163,7 +234,7 @@ export default function Home() {
         <section style={{ maxWidth: '600px', margin: '0 auto', backgroundColor: 'white', padding: '30px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
           <h2 style={{ fontSize: '1.5rem', marginBottom: '8px', color: '#111827' }}>Kendi Eserini Listele</h2>
           <p style={{ color: '#6b7280', marginBottom: '24px', fontSize: '0.95rem' }}>
-            Eserinizi aylık süre seçenekleriyle pazaryerinde milyonlarla buluşturun.
+            Eserinizi aylık süre seçenekleriyle (300 TL bazlı) pazaryerinde sergileyin.
           </p>
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -191,15 +262,15 @@ export default function Home() {
             </div>
 
             <div>
-              <label style={{ display: 'block', fontWeight: '500', marginBottom: '6px', color: '#374151' }}>Listeleme Süresi ve Ücreti (ETH)</label>
+              <label style={{ display: 'block', fontWeight: '500', marginBottom: '6px', color: '#374151' }}>Listeleme Süresi ve Ücreti</label>
               <select 
                 value={duration} 
                 onChange={handleDurationChange}
                 style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: 'white' }}
               >
-                <option value="1">1 Ay (0.004 ETH)</option>
-                <option value="3">3 Ay (0.010 ETH - İndirimli)</option>
-                <option value="6">6 Ay (0.018 ETH - Avantajlı)</option>
+                <option value="1">1 Ay (~300 TL karşılığı ETH)</option>
+                <option value="3">3 Ay (~850 TL - İndirimli)</option>
+                <option value="6">6 Ay (~1600 TL - Avantajlı)</option>
               </select>
             </div>
 
@@ -219,7 +290,7 @@ export default function Home() {
               disabled={uploading}
               style={{ backgroundColor: uploading ? '#9ca3af' : '#059669', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontSize: '1rem', fontWeight: 'bold', cursor: uploading ? 'not-allowed' : 'pointer', marginTop: '10px' }}
             >
-              {uploading ? 'Yükleniyor & Yayınlanıyor...' : `Listeleme Ücreti Öde (${price} ETH) ve Yayınla`}
+              {uploading ? 'Yükleniyor & Ödeniyor...' : `Listeleme Ücreti Öde (~${priceEth} ETH) ve Yayınla`}
             </button>
           </form>
         </section>
