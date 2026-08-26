@@ -4,18 +4,20 @@ import { ethers } from 'ethers';
 
 export default function Home() {
   const [account, setAccount] = useState('');
+  const [balance, setBalance] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [duration, setDuration] = useState('1'); 
   const [price, setPrice] = useState('0.004'); 
   const [imageFile, setImageFile] = useState(null);
-
-  // Platform sahibinin kişisel ETH cüzdan adresi (İleride kendi MetaMask adresini buraya yazabilirsin)
-  const ADMIN_ETH_WALLET = "0xSeninKisiselEthCüzdanAdresinBurayaGelecek";
+  const [uploading, setUploading] = useState(false);
+  
+  // Seçilen eserin detayını göstermek için modal state'i
+  const [selectedArt, setSelectedArt] = useState(null);
 
   const [listings, setListings] = useState([
-    { id: 1, title: 'Cyber Mona Lisa', artist: '0x123...ABCD', price: '0.04 ETH', duration: '3 Ay', image: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=500&auto=format&fit=crop&q=60' },
-    { id: 2, title: 'Abstract Neon', artist: '0x987...WXYZ', price: '0.004 ETH', duration: '1 Ay', image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60' }
+    { id: 1, title: 'Cyber Mona Lisa', description: 'Yapay zeka ve rönesans sanatının dijital sentezi.', artist: '0x123...ABCD', price: '0.04 ETH', duration: '3 Ay', image: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=500&auto=format&fit=crop&q=60' },
+    { id: 2, title: 'Abstract Neon', description: 'Geleceğin sokak kültüründen ilham alan neon kompozisyon.', artist: '0x987...WXYZ', price: '0.004 ETH', duration: '1 Ay', image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60' }
   ]);
 
   const connectWallet = async () => {
@@ -23,7 +25,13 @@ export default function Home() {
       try {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const accounts = await provider.send('eth_requestAccounts', []);
-        setAccount(accounts[0]);
+        const userAccount = accounts[0];
+        setAccount(userAccount);
+
+        // Kullanıcının ETH bakiyesini çek
+        const rawBalance = await provider.getBalance(userAccount);
+        const ethBalance = ethers.utils.formatEther(rawBalance);
+        setBalance(parseFloat(ethBalance).toFixed(4));
       } catch (error) {
         console.error('Cüzdan bağlantı hatası:', error);
       }
@@ -46,12 +54,40 @@ export default function Home() {
       alert('Lütfen önce cüzdanınızı bağlayın!');
       return;
     }
-    
-    alert(`Eser başarıyla işleme alındı!\n\nSeçilen Süre: ${duration} Ay\nÖdenecek Tutar: ${price} ETH\n\n(Not: İleride gerçek akıllı kontrat bağlandığında ödeme otomatik olarak cüzdanınıza aktarılacaktır.)`);
-    
-    setTitle('');
-    setDescription('');
-    setImageFile(null);
+
+    if (!imageFile) {
+      alert('Lütfen yüklenecek bir eser görseli seçin!');
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const imageUrl = URL.createObjectURL(imageFile);
+
+      const newListing = {
+        id: listings.length + 1,
+        title: title,
+        description: description || 'Sanatçı tarafından açıklama girilmedi.',
+        artist: `${account.substring(0, 6)}...${account.substring(38)}`,
+        price: `${price} ETH`,
+        duration: `${duration} Ay`,
+        image: imageUrl
+      };
+
+      setListings([newListing, ...listings]);
+
+      alert(`Tebrikler! Eseriniz başarıyla ${duration} aylığına Efnan ArtBazaar'da listelendi!`);
+      
+      setTitle('');
+      setDescription('');
+      setImageFile(null);
+    } catch (error) {
+      console.error('Yükleme hatası:', error);
+      alert('Eser yüklenirken bir hata oluştu.');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const buyArt = (artTitle, artPrice) => {
@@ -59,11 +95,11 @@ export default function Home() {
       alert('Satın almak için lütfen önce cüzdanınızı bağlayın!');
       return;
     }
-    alert(`${artTitle} adlı eser için ${artPrice} ödeme işlemi başlatılıyor...`);
+    alert(`${artTitle} adlı eser için ${artPrice} ödeme işlemi akıllı kontrat üzerinden başlatılıyor...`);
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', fontFamily: 'sans-serif' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', fontFamily: 'sans-serif', position: 'relative' }}>
       <Head>
         <title>Efnan ArtBazaar - Dijital Sanat Pazaryeri</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -73,12 +109,19 @@ export default function Home() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.25rem', fontWeight: 'bold', color: '#1f2937' }}>
           <span>🎨</span> Efnan ArtBazaar
         </div>
-        <button 
-          onClick={connectWallet}
-          style={{ backgroundColor: '#4f46e5', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
-        >
-          {account ? `${account.substring(0, 6)}...${account.substring(38)}` : 'Cüzdan Bağla'}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {account && (
+            <span style={{ fontSize: '0.9rem', backgroundColor: '#eef2ff', color: '#4f46e5', padding: '6px 12px', borderRadius: '20px', fontWeight: '600' }}>
+              💎 {balance} ETH
+            </span>
+          )}
+          <button 
+            onClick={connectWallet}
+            style={{ backgroundColor: '#4f46e5', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+          >
+            {account ? `${account.substring(0, 6)}...${account.substring(38)}` : 'Cüzdan Bağla'}
+          </button>
+        </div>
       </nav>
 
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px' }}>
@@ -93,7 +136,11 @@ export default function Home() {
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
             {listings.map((art) => (
-              <div key={art.id} style={{ backgroundColor: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column' }}>
+              <div 
+                key={art.id} 
+                onClick={() => setSelectedArt(art)}
+                style={{ backgroundColor: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', cursor: 'pointer', transition: 'transform 0.2s' }}
+              >
                 <img src={art.image} alt={art.title} style={{ width: '100%', height: '220px', objectFit: 'cover' }} />
                 <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
                   <h3 style={{ fontSize: '1.2rem', marginBottom: '6px', color: '#111827' }}>{art.title}</h3>
@@ -101,7 +148,7 @@ export default function Home() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
                     <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#059669' }}>{art.price}</span>
                     <button 
-                      onClick={() => buyArt(art.title, art.price)}
+                      onClick={(e) => { e.stopPropagation(); buyArt(art.title, art.price); }}
                       style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
                     >
                       Satın Al
@@ -169,14 +216,49 @@ export default function Home() {
 
             <button 
               type="submit"
-              style={{ backgroundColor: '#059669', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}
+              disabled={uploading}
+              style={{ backgroundColor: uploading ? '#9ca3af' : '#059669', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontSize: '1rem', fontWeight: 'bold', cursor: uploading ? 'not-allowed' : 'pointer', marginTop: '10px' }}
             >
-              Listeleme Ücretini Öde ({price} ETH) ve Yayınla
+              {uploading ? 'Yükleniyor & Yayınlanıyor...' : `Listeleme Ücreti Öde (${price} ETH) ve Yayınla`}
             </button>
           </form>
         </section>
 
       </main>
+
+      {/* Eser Detay Modalı */}
+      {selectedArt && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100, padding: '20px' }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '16px', maxWidth: '500px', width: '100%', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+            <img src={selectedArt.image} alt={selectedArt.title} style={{ width: '100%', height: '300px', objectFit: 'cover' }} />
+            <div style={{ padding: '24px' }}>
+              <h2 style={{ fontSize: '1.5rem', marginBottom: '8px', color: '#111827' }}>{selectedArt.title}</h2>
+              <p style={{ color: '#4b5563', fontSize: '0.95rem', marginBottom: '16px' }}>{selectedArt.description}</p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', fontSize: '0.9rem', color: '#6b7280' }}>
+                <span>Sanatçı: <b>{selectedArt.artist}</b></span>
+                <span>Süre: <b>{selectedArt.duration}</b></span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #e5e7eb', paddingTop: '16px' }}>
+                <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#059669' }}>{selectedArt.price}</span>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button 
+                    onClick={() => setSelectedArt(null)}
+                    style={{ backgroundColor: '#e5e7eb', color: '#374151', border: 'none', padding: '10px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                  >
+                    Kapat
+                  </button>
+                  <button 
+                    onClick={() => { buyArt(selectedArt.title, selectedArt.price); setSelectedArt(null); }}
+                    style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                  >
+                    Hemen Satın Al
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
