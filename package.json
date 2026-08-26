@@ -8,10 +8,9 @@
     "start": "next start"
   },
   "dependencies": {
+    "ethers": "^5.7.2",
     "next": "latest",
     "react": "latest",
-    "react-dom": "latest",
-    "pg": "^8.11.0",
-    "iyzipay": "^2.0.8"
+    "react-dom": "latest"
   }
 }
