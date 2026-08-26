@@ -1,6 +1,6 @@
-
 import { useState } from 'react';
 import { ethers } from 'ethers';
+import Head from 'next/head';
 
 export default function Home() {
   const [account, setAccount] = useState(null);
@@ -65,6 +65,13 @@ export default function Home() {
 
   return (
     <div style={{ fontFamily: 'sans-serif', textAlign: 'center', padding: '40px', maxWidth: '600px', margin: '0 auto' }}>
+      <Head>
+        <title>ArtBazaar - Web3 Sanat Pazaryeri</title>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#f6851b" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      </Head>
+
       <h1>ArtBazaar Sanatçı Paneli</h1>
       <p>İlan sürenizi seçin, %90 kazanç ve %10 komisyon sistemiyle hemen satışa başlayın.</p>
       
@@ -104,4 +111,4 @@ export default function Home() {
       {status && <p style={{ marginTop: '20px', fontWeight: 'bold', color: '#333' }}>{status}</p>}
     </div>
   );
-                     }
+}
