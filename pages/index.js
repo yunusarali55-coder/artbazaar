@@ -70,12 +70,6 @@ export default function Home() {
     }
   };
 
-  const selectedMonthText = (plan) => {
-    if (plan === '2') return '2 Aylık (300 TL karşılığı ETH)';
-    if (plan === '4') return '4 Aylık (600 TL karşılığı ETH)';
-    return '6 Aylık (900 TL karşılığı ETH)';
-  };
-
   return (
     <div style={{ fontFamily: 'sans-serif', maxWidth: '600px', margin: '0 auto', padding: '20px', textAlign: 'center' }}>
       <Head>
