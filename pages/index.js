@@ -10,7 +10,6 @@ export default function Home() {
   const [price, setPrice] = useState('0.004'); 
   const [imageFile, setImageFile] = useState(null);
 
-  // Örnek mevcut ilanlar (Pazaryeri Vitrini)
   const [listings, setListings] = useState([
     { id: 1, title: 'Cyber Mona Lisa', artist: '0x123...ABCD', price: '0.04 ETH', duration: '3 Ay', image: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=500&auto=format&fit=crop&q=60' },
     { id: 2, title: 'Abstract Neon', artist: '0x987...WXYZ', price: '0.02 ETH', duration: '1 Ay', image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60' }
@@ -58,13 +57,12 @@ export default function Home() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', fontFamily: 'sans-serif' }}>
       <Head>
-        <title>ArtBazaar - Dijital Sanat Pazaryeri</title>
+        <title>Efnan ArtBazaar - Dijital Sanat Pazaryeri</title>
       </Head>
 
-      {/* Üst Menü */}
-      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 2rem', backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', position: 'sticky', top: 0, zIndex: 10 })}>
+      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 2rem', backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', position: 'sticky', top: 0, zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.25rem', fontWeight: 'bold', color: '#1f2937' }}>
-          <span>🎨</span> ArtBazaar
+          <span>🎨</span> Efnan ArtBazaar
         </div>
         <button 
           onClick={connectWallet}
@@ -76,13 +74,11 @@ export default function Home() {
 
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px' }}>
         
-        {/* Giriş / Karşılama Alanı */}
         <div style={{ textAlign: 'center', marginBottom: '50px' }}>
-          <h1 style={{ fontSize: '2.5rem', color: '#111827', marginBottom: '10px' }}>Sanatçılar ve Koleksiyonerler İçin Pazaryeri</h1>
+          <h1 style={{ fontSize: '2.5rem', color: '#111827', marginBottom: '10px' }}>Efnan ArtBazaar'a Hoş Geldiniz</h1>
           <p style={{ color: '#4b5563', fontSize: '1.1rem' }}>Eşsiz dijital sanat eserlerini keşfedin, satın alın veya kendi eserlerinizi aylık periyotlarla sergileyin.</p>
         </div>
 
-        {/* Bölüm 1: Satıştaki Eserler Galerisi */}
         <section style={{ marginBottom: '60px' }}>
           <h2 style={{ fontSize: '1.75rem', marginBottom: '20px', color: '#1f2937', borderBottom: '2px solid #e5e7eb', paddingBottom: '10px' }}>Keşfet & Satın Al</h2>
           
@@ -108,7 +104,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Bölüm 2: Sanatçı Eser Yükleme Paneli */}
         <section style={{ maxWidth: '600px', margin: '0 auto', backgroundColor: 'white', padding: '30px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
           <h2 style={{ fontSize: '1.5rem', marginBottom: '8px', color: '#111827' }}>Kendi Eserini Listele</h2>
           <p style={{ color: '#6b7280', marginBottom: '24px', fontSize: '0.95rem' }}>
@@ -167,14 +162,12 @@ export default function Home() {
               type="submit"
               style={{ backgroundColor: '#059669', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}
             >
-              Listeleme Ücretini Öde ({price} ETH) ve Yayınla
+              Listeleme Ücretini Öde ({price} ETH) dan Yayınla
             </button>
           </form>
         </section>
 
       </main>
-    </div><Head>
-  <title>Efnan ArtBazaar - Dijital Sanat Pazaryeri</title>
-</Head>
+    </div>
   );
 }
