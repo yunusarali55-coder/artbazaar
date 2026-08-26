@@ -6,11 +6,16 @@ export default function Home() {
   const [account, setAccount] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [duration, setDuration] = useState('1'); // Ay cinsinden
-  const [price, setPrice] = useState('0.004'); // Örnek fiyat
+  const [duration, setDuration] = useState('1'); 
+  const [price, setPrice] = useState('0.004'); 
   const [imageFile, setImageFile] = useState(null);
 
-  // Cüzdan Bağlama Fonksiyonu
+  // Örnek mevcut ilanlar (Pazaryeri Vitrini)
+  const [listings, setListings] = useState([
+    { id: 1, title: 'Cyber Mona Lisa', artist: '0x123...ABCD', price: '0.04 ETH', duration: '3 Ay', image: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=500&auto=format&fit=crop&q=60' },
+    { id: 2, title: 'Abstract Neon', artist: '0x987...WXYZ', price: '0.02 ETH', duration: '1 Ay', image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60' }
+  ]);
+
   const connectWallet = async () => {
     if (typeof window.ethereum !== 'undefined') {
       try {
@@ -25,17 +30,6 @@ export default function Home() {
     }
   };
 
-  // Eser Listeleme ve Ödeme Süreci
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!account) {
-      alert('Lütfen önce cüzdanınızı bağlayın!');
-      return;
-    }
-    alert(`Eser başarıyla sisteme yüklendi! Seçilen süre: ${duration} Ay. Ödeme onayı bekleniyor...`);
-  };
-
-  // Süre değiştikçe örnek fiyatı otomatik güncelleme
   const handleDurationChange = (e) => {
     const val = e.target.value;
     setDuration(val);
@@ -44,15 +38,32 @@ export default function Home() {
     else if (val === '6') setPrice('0.018');
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!account) {
+      alert('Lütfen önce cüzdanınızı bağlayın!');
+      return;
+    }
+    alert(`Eser başarıyla sisteme yüklendi ve vitrine eklendi! Seçilen süre: ${duration} Ay.`);
+  };
+
+  const buyArt = (artTitle, artPrice) => {
+    if (!account) {
+      alert('Satın almak için lütfen önce cüzdanınızı bağlayın!');
+      return;
+    }
+    alert(`${artTitle} adlı eser için ${artPrice} ödeme işlemi başlatılıyor...`);
+  };
+
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', fontFamily: 'sans-serif' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', fontFamily: 'sans-serif' }}>
       <Head>
-        <title>ArtBazaar - Sanatçı Pazaryeri</title>
+        <title>ArtBazaar - Dijital Sanat Pazaryeri</title>
       </Head>
 
       {/* Üst Menü */}
-      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 2rem', backgroundColor: 'white', borderBottom: '1px solid #e5e7eb' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.25rem', fontWeight: 'bold' }}>
+      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 2rem', backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', position: 'sticky', top: 0, zIndex: 10 })}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.25rem', fontWeight: 'bold', color: '#1f2937' }}>
           <span>🎨</span> ArtBazaar
         </div>
         <button 
@@ -63,68 +74,104 @@ export default function Home() {
         </button>
       </nav>
 
-      {/* Ana İçerik / Sanatçı Eser Yükleme Paneli */}
-      <main style={{ maxWidth: '600px', margin: '40px auto', padding: '20px', backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
-        <h1 style={{ fontSize: '1.5rem', marginBottom: '8px', color: '#111827' }}>Sanat Eserini Listele</h1>
-        <p style={{ color: '#6b7280', marginBottom: '24px', fontSize: '0.95rem' }}>
-          Kendi dijital sanat eserlerinizi yükleyin, aylık süre seçerek pazaryerinde sergileyin.
-        </p>
+      <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px' }}>
+        
+        {/* Giriş / Karşılama Alanı */}
+        <div style={{ textAlign: 'center', marginBottom: '50px' }}>
+          <h1 style={{ fontSize: '2.5rem', color: '#111827', marginBottom: '10px' }}>Sanatçılar ve Koleksiyonerler İçin Pazaryeri</h1>
+          <p style={{ color: '#4b5563', fontSize: '1.1rem' }}>Eşsiz dijital sanat eserlerini keşfedin, satın alın veya kendi eserlerinizi aylık periyotlarla sergileyin.</p>
+        </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div>
-            <label style={{ display: 'block', fontWeight: '500', marginBottom: '6px', color: '#374151' }}>Eser Adı</label>
-            <input 
-              type="text" 
-              placeholder="Örn: Cyber Mona Lisa" 
-              value={title} 
-              onChange={(e) => setTitle(e.target.value)}
-              required
-              style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }}
-            />
+        {/* Bölüm 1: Satıştaki Eserler Galerisi */}
+        <section style={{ marginBottom: '60px' }}>
+          <h2 style={{ fontSize: '1.75rem', marginBottom: '20px', color: '#1f2937', borderBottom: '2px solid #e5e7eb', paddingBottom: '10px' }}>Keşfet & Satın Al</h2>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
+            {listings.map((art) => (
+              <div key={art.id} style={{ backgroundColor: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column' }}>
+                <img src={art.image} alt={art.title} style={{ width: '100%', height: '220px', objectFit: 'cover' }} />
+                <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+                  <h3 style={{ fontSize: '1.2rem', marginBottom: '6px', color: '#111827' }}>{art.title}</h3>
+                  <p style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '12px' }}>Sanatçı: {art.artist}</p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
+                    <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#059669' }}>{art.price}</span>
+                    <button 
+                      onClick={() => buyArt(art.title, art.price)}
+                      style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                    >
+                      Satın Al
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
+        </section>
 
-          <div>
-            <label style={{ display: 'block', fontWeight: '500', marginBottom: '6px', color: '#374151' }}>Açıklama</label>
-            <textarea 
-              placeholder="Eseriniz hakkında kısa bilgi verin..." 
-              value={description} 
-              onChange={(e) => setDescription(e.target.value)}
-              rows="3"
-              style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }}
-            />
-          </div>
+        {/* Bölüm 2: Sanatçı Eser Yükleme Paneli */}
+        <section style={{ maxWidth: '600px', margin: '0 auto', backgroundColor: 'white', padding: '30px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+          <h2 style={{ fontSize: '1.5rem', marginBottom: '8px', color: '#111827' }}>Kendi Eserini Listele</h2>
+          <p style={{ color: '#6b7280', marginBottom: '24px', fontSize: '0.95rem' }}>
+            Eserinizi aylık süre seçenekleriyle pazaryerinde milyonlarla buluşturun.
+          </p>
 
-          <div>
-            <label style={{ display: 'block', fontWeight: '500', marginBottom: '6px', color: '#374151' }}>Listeleme Süresi (Aylık)</label>
-            <select 
-              value={duration} 
-              onChange={handleDurationChange}
-              style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: 'white' }}
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div>
+              <label style={{ display: 'block', fontWeight: '500', marginBottom: '6px', color: '#374151' }}>Eser Adı</label>
+              <input 
+                type="text" 
+                placeholder="Örn: Future Space" 
+                value={title} 
+                onChange={(e) => setTitle(e.target.value)}
+                required
+                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontWeight: '500', marginBottom: '6px', color: '#374151' }}>Açıklama</label>
+              <textarea 
+                placeholder="Eseriniz hakkında kısa bilgi verin..." 
+                value={description} 
+                onChange={(e) => setDescription(e.target.value)}
+                rows="3"
+                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontWeight: '500', marginBottom: '6px', color: '#374151' }}>Listeleme Süresi (Aylık)</label>
+              <select 
+                value={duration} 
+                onChange={handleDurationChange}
+                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: 'white' }}
+              >
+                <option value="1">1 Ay (0.004 ETH)</option>
+                <option value="3">3 Ay (0.010 ETH - İndirimli)</option>
+                <option value="6">6 Ay (0.018 ETH - Avantajlı)</option>
+              </select>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontWeight: '500', marginBottom: '6px', color: '#374151' }}>Eser Dosyası (Görsel)</label>
+              <input 
+                type="file" 
+                accept="image/*"
+                onChange={(e) => setImageFile(e.target.files[0])}
+                required
+                style={{ width: '100%', padding: '8px', border: '1px dashed #d1d5db', borderRadius: '6px', backgroundColor: '#f9fafb' }}
+              />
+            </div>
+
+            <button 
+              type="submit"
+              style={{ backgroundColor: '#059669', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}
             >
-              <option value="1">1 Ay (0.004 ETH)</option>
-              <option value="3">3 Ay (0.010 ETH - İndirimli)</option>
-              <option value="6">6 Ay (0.018 ETH - Avantajlı)</option>
-            </select>
-          </div>
+              Listeleme Ücretini Öde ({price} ETH) ve Yayınla
+            </button>
+          </form>
+        </section>
 
-          <div>
-            <label style={{ display: 'block', fontWeight: '500', marginBottom: '6px', color: '#374151' }}>Eser Dosyası (Görsel)</label>
-            <input 
-              type="file" 
-              accept="image/*"
-              onChange={(e) => setImageFile(e.target.files[0])}
-              required
-              style={{ width: '100%', padding: '8px', border: '1px dashed #d1d5db', borderRadius: '6px', backgroundColor: '#f9fafb' }}
-            />
-          </div>
-
-          <button 
-            type="submit"
-            style={{ backgroundColor: '#059669', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}
-          >
-            Ödeme Yap ve Eseri Yayınla ({price} ETH)
-          </button>
-        </form>
       </main>
     </div>
   );
