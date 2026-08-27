@@ -3,7 +3,6 @@ import Head from 'next/head';
 import { ethers } from 'ethers';
 
 export default function Home() {
-  // --- ÜYELİK VE OTURUM STATE'LERİ ---
   const [currentUser, setCurrentUser] = useState(null);
   const [authMode, setAuthMode] = useState('login');
   const [email, setEmail] = useState('');
@@ -11,7 +10,6 @@ export default function Home() {
   const [username, setUsername] = useState('');
   const [showAuthModal, setShowAuthModal] = useState(false);
 
-  // --- WEB3 VE PAZARYERİ STATE'LERİ ---
   const [account, setAccount] = useState('');
   const [balance, setBalance] = useState('');
   const [title, setTitle] = useState('');
@@ -21,7 +19,6 @@ export default function Home() {
   const [uploading, setUploading] = useState(false);
   const [selectedArt, setSelectedArt] = useState(null);
 
-  // --- ÖDEME YÖNTEMİ SEÇİM MODALI STATE'LERİ ---
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [pendingActionType, setPendingActionType] = useState(null); 
   const [pendingArtData, setPendingArtData] = useState(null); 
@@ -95,7 +92,6 @@ export default function Home() {
     }
   };
 
-  // --- ESER LİSTELEME (ÜCRETSİZ) ---
   const triggerListingProcess = (e) => {
     e.preventDefault();
     if (!currentUser) {
@@ -209,7 +205,7 @@ export default function Home() {
       {/* ÜST MENÜ */}
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 2rem', backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', position: 'sticky', top: 0, zIndex: 10 }}>
         
-        {/* RENKLİ SİTE İSMİ VE ARKA PLANINDA FİLİSTİN ÇOCUK GÖRSELİ */}
+        {/* RENKLİ SİTE İSMİ */}
         <div style={{ 
           position: 'relative', 
           display: 'flex', 
@@ -218,21 +214,9 @@ export default function Home() {
           padding: '10px 18px', 
           borderRadius: '10px', 
           overflow: 'hidden',
-          boxShadow: 'inset 0 0 15px rgba(0,0,0,0.6)'
+          boxShadow: 'inset 0 0 15px rgba(0,0,0,0.6)',
+          backgroundColor: '#333'
         }}>
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1542838132-92c53300491e?w=600&auto=format&fit=crop&q=80')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            filter: 'grayscale(30%) contrast(120%)',
-            zIndex: 1
-          }}></div>
-
           <span style={{ fontSize: '1.4rem', zIndex: 2 }}>🕊️</span>
           
           <div style={{ fontSize: '1.35rem', fontWeight: '900', zIndex: 2, letterSpacing: '0.5px', textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
@@ -281,20 +265,23 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* ANA İÇERİK - ORTADAKİ BÜYÜK YAZI YERİNE İSTEDİĞİN FİLİSTİNLİ ÇOCUK RESMİ */}
+      {/* ANA İÇERİK - ORTADAKİ GÖRSEL ALANI */}
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px' }}>
         
-        {/* Ortadaki Anlamlı Resim Alanı */}
+        {/* Ortadaki Resim Alanı */}
         <div style={{ textAlign: 'center', marginBottom: '50px' }}>
-          <div style={{ maxWidth: '800px', margin: '0 auto', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.15)' }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', backgroundColor: '#e5e7eb', minHeight: '300px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <img 
-              src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&auto=format&fit=crop&q=80" 
-              alt="Filistinli Çocuk ve Vicdan" 
-              style={{ width: '100%', height: '350px', objectFit: 'cover', filter: 'brightness(90%) contrast(110%)' }} 
+              src="https://images.unsplash.com/photo-1544717305-2782549b5136?w=800&auto=format&fit=crop&q=80" 
+              alt="Anlamlı Görsel" 
+              style={{ width: '100%', height: '380px', objectFit: 'cover' }} 
+              onError={(e)=>{
+                e.target.onerror = null; 
+                e.target.src = 'https://picsum.photos/800/400';
+              }}
             />
           </div>
-          <h1 style={{ fontSize: '2rem', color: '#111827', marginTop: '20px', marginBottom: '10px' }}>Efnan ArtBazaar'a Hoş Geldiniz</h1>
-          <p style={{ color: '#4b5563', fontSize: '1.1rem' }}>Eşsiz dijital sanat eserlerini keşfedin, eserlerinizi tamamen ücretsiz listeleyin.</p>
+          <p style={{ color: '#4b5563', fontSize: '1.1rem', marginTop: '20px' }}>Eşsiz dijital sanat eserlerini keşfedin, eserlerinizi tamamen ücretsiz listeleyin.</p>
         </div>
 
         {/* KEŞFET & SATIN AL */}
