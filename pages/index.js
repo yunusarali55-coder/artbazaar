@@ -1,3 +1,5 @@
+JavaScript
+
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { ethers } from 'ethers';
@@ -29,9 +31,7 @@ export default function Home() {
   ]);
 
   const platformWalletAddress = "0xAd58d1050942F795E651153231Ce8A152180C055";
-
-  // Gönderdiğin özel fotoğraf (Papatyalı çocuk)
-  const exactHeroImage = "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&auto=format&fit=crop&q=80"; // Güvenilir ve net bir alternatif, ancak doğrudan kendi dosyanı koymak istersen public/ klasörüne atıp src="/dosya-adi.jpg" yapabilirsin.
+  const exactHeroImage = "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&auto=format&fit=crop&q=80";
 
   useEffect(() => {
     const savedUser = localStorage.getItem('efnan_user');
@@ -251,7 +251,7 @@ export default function Home() {
             </div>
           ) : (
             <button 
-              onClick={() => setShowAuthModal(true)}
+              onClick={() => { setAuthMode('login'); setShowAuthModal(true); }}
               style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem' }}
             >
               Giriş Yap / Üye Ol
@@ -269,7 +269,7 @@ export default function Home() {
       {/* ANA İÇERİK */}
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px 12px' }}>
         
-        {/* İSTEDİĞİN ÖZEL RESİM ALANI */}
+        {/* ÖZEL RESİM ALANI */}
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 8px 20px rgba(0,0,0,0.15)', backgroundColor: '#111' }}>
             <img 
@@ -507,3 +507,5 @@ export default function Home() {
     </div>
   );
 }
+
+Efnan ArtBazaar projenize yeni özellikler eklemek isterseniz (örneğin akıllı sözleşme entegrasyonu, veritabanı bağlantısı vb.), sormaktan çekinmeyin!
