@@ -30,9 +30,6 @@ export default function Home() {
 
   const platformWalletAddress = "0xAd58d1050942F795E651153231Ce8A152180C055";
 
-  // Doğrudan kodun içine gömülen "İnsanlık Öldü" görseli (Kırılma şansı %0)
-  const exactGazaImage = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='400' viewBox='0 0 800 400'><rect width='800' height='400' fill='%23121212'/><rect x='20' y='20' width='760' height='360' fill='%231a1a1a' stroke='%23333' stroke-width='2'/><path d='M100 350 L100 100 L300 80 L350 350 Z' fill='%232a2a2a'/><text x='130' y='200' font-family='sans-serif' font-weight='bold' font-size='32' fill='%23e5e7eb' letter-spacing='2'>İNSANLIK</text><text x='150' y='250' font-family='sans-serif' font-weight='bold' font-size='32' fill='%23e5e7eb' letter-spacing='2'>ÖLDU</text><circle cx='450' cy='220' r='18' fill='%233d2b1f'/><path d='M450 238 L450 310' stroke='%233d2b1f' stroke-width='14'/><path d='M450 260 L420 230' stroke='%233d2b1f' stroke-width='8'/><path d='M450 310 L430 370' stroke='%233d2b1f' stroke-width='10'/><path d='M450 310 L470 370' stroke='%233d2b1f' stroke-width='10'/><path d='M0 370 L800 370' stroke='%23000' stroke-width='20'/></svg>";
-
   useEffect(() => {
     const savedUser = localStorage.getItem('efnan_user');
     if (savedUser) {
@@ -199,30 +196,28 @@ export default function Home() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', fontFamily: 'sans-serif', position: 'relative' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', fontFamily: 'sans-serif', position: 'relative', overflowX: 'hidden' }}>
       <Head>
         <title>Efnan ArtBazaar - Dijital Sanat Pazaryeri</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
 
       {/* ÜST MENÜ */}
-      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 2rem', backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', position: 'sticky', top: 0, zIndex: 10 }}>
+      <nav style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', position: 'sticky', top: 0, zIndex: 10, gap: '10px' }}>
         
         {/* RENKLİ SİTE İSMİ */}
         <div style={{ 
-          position: 'relative', 
           display: 'flex', 
           alignItems: 'center', 
-          gap: '12px', 
-          padding: '10px 18px', 
-          borderRadius: '10px', 
-          overflow: 'hidden',
-          boxShadow: 'inset 0 0 15px rgba(0,0,0,0.6)',
-          backgroundColor: '#222'
+          gap: '8px', 
+          padding: '8px 12px', 
+          borderRadius: '8px', 
+          backgroundColor: '#222',
+          boxShadow: 'inset 0 0 10px rgba(0,0,0,0.6)'
         }}>
-          <span style={{ fontSize: '1.4rem', zIndex: 2 }}>🕊️</span>
+          <span style={{ fontSize: '1.2rem' }}>🕊️</span>
           
-          <div style={{ fontSize: '1.35rem', fontWeight: '900', zIndex: 2, letterSpacing: '0.5px', textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
+          <div style={{ fontSize: '1.1rem', fontWeight: '900', letterSpacing: '0.3px', whiteSpace: 'nowrap' }}>
             <span style={{ color: '#ff4d4d' }}>E</span>
             <span style={{ color: '#ffa500' }}>f</span>
             <span style={{ color: '#ffff33' }}>n</span>
@@ -240,13 +235,13 @@ export default function Home() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {currentUser ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '0.9rem', color: '#374151', fontWeight: '500' }}>👤 {currentUser.username}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '0.85rem', color: '#374151', fontWeight: '500', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>👤 {currentUser.username}</span>
               <button 
                 onClick={handleLogout}
-                style={{ backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem' }}
+                style={{ backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem' }}
               >
                 Çıkış
               </button>
@@ -254,14 +249,14 @@ export default function Home() {
           ) : (
             <button 
               onClick={() => setShowAuthModal(true)}
-              style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+              style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem' }}
             >
               Giriş Yap / Üye Ol
             </button>
           )}
 
           {account && (
-            <span style={{ fontSize: '0.85rem', backgroundColor: '#eef2ff', color: '#4f46e5', padding: '6px 10px', borderRadius: '20px', fontWeight: '600' }}>
+            <span style={{ fontSize: '0.8rem', backgroundColor: '#eef2ff', color: '#4f46e5', padding: '6px 8px', borderRadius: '20px', fontWeight: '600', whiteSpace: 'nowrap' }}>
               💎 {balance} ETH
             </span>
           )}
@@ -269,39 +264,39 @@ export default function Home() {
       </nav>
 
       {/* ANA İÇERİK */}
-      <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px' }}>
+      <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px 12px' }}>
         
-        <div style={{ textAlign: 'center', marginBottom: '50px' }}>
-          <div style={{ maxWidth: '800px', margin: '0 auto', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', backgroundColor: '#111' }}>
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 8px 20px rgba(0,0,0,0.15)', backgroundColor: '#111' }}>
             <img 
-              src={exactGazaImage} 
-              alt="İnsanlık Öldü Sanat Eseri" 
-              style={{ width: '100%', height: '380px', objectFit: 'cover' }} 
+              src="https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=800&auto=format&fit=crop&q=80" 
+              alt="Dijital Sanat Sergisi" 
+              style={{ width: '100%', height: '240px', objectFit: 'cover' }} 
             />
           </div>
-          <p style={{ color: '#4b5563', fontSize: '1.1rem', marginTop: '20px' }}>Eşsiz dijital sanat eserlerini keşfedin, eserlerinizi tamamen ücretsiz listeleyin.</p>
+          <p style={{ color: '#4b5563', fontSize: '1rem', marginTop: '16px', padding: '0 10px' }}>Eşsiz dijital sanat eserlerini keşfedin, eserlerinizi tamamen ücretsiz listeleyin.</p>
         </div>
 
         {/* KEŞFET & SATIN AL */}
-        <section style={{ marginBottom: '60px' }}>
-          <h2 style={{ fontSize: '1.75rem', marginBottom: '20px', color: '#1f2937', borderBottom: '2px solid #e5e7eb', paddingBottom: '10px' }}>Keşfet & Satın Al</h2>
+        <section style={{ marginBottom: '40px' }}>
+          <h2 style={{ fontSize: '1.5rem', marginBottom: '16px', color: '#1f2937', borderBottom: '2px solid #e5e7eb', paddingBottom: '8px' }}>Keşfet & Satın Al</h2>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
             {listings.map((art) => (
               <div 
                 key={art.id} 
                 onClick={() => setSelectedArt(art)}
                 style={{ backgroundColor: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', cursor: 'pointer', transition: 'transform 0.2s' }}
               >
-                <img src={art.image} alt={art.title} style={{ width: '100%', height: '220px', objectFit: 'cover' }} />
-                <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-                  <h3 style={{ fontSize: '1.2rem', marginBottom: '6px', color: '#111827' }}>{art.title}</h3>
-                  <p style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '12px' }}>Sanatçı: {art.artist}</p>
+                <img src={art.image} alt={art.title} style={{ width: '100%', height: '200px', objectFit: 'cover' }} />
+                <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+                  <h3 style={{ fontSize: '1.1rem', marginBottom: '4px', color: '#111827' }}>{art.title}</h3>
+                  <p style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: '10px' }}>Sanatçı: {art.artist}</p>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
-                    <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#059669' }}>{art.price}</span>
+                    <span style={{ fontSize: '1rem', fontWeight: 'bold', color: '#059669' }}>{art.price}</span>
                     <button 
                       onClick={(e) => { e.stopPropagation(); triggerBuyProcess(art); }}
-                      style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                      style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem' }}
                     >
                       Satın Al
                     </button>
@@ -313,42 +308,42 @@ export default function Home() {
         </section>
 
         {/* ESER LİSTELEME FORMU */}
-        <section style={{ maxWidth: '600px', margin: '0 auto', backgroundColor: 'white', padding: '30px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '8px', color: '#111827' }}>Kendi Eserini Ücretsiz Listele</h2>
-          <p style={{ color: '#6b7280', marginBottom: '24px', fontSize: '0.95rem' }}>
+        <section style={{ maxWidth: '600px', margin: '0 auto', backgroundColor: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+          <h2 style={{ fontSize: '1.35rem', marginBottom: '6px', color: '#111827' }}>Kendi Eserini Ücretsiz Listele</h2>
+          <p style={{ color: '#6b7280', marginBottom: '18px', fontSize: '0.9rem' }}>
             Eserinizi dilediğiniz süre seçeneğiyle pazaryerinde tamamen ücretsiz sergileyin.
           </p>
 
-          <form onSubmit={triggerListingProcess} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <form onSubmit={triggerListingProcess} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div>
-              <label style={{ display: 'block', fontWeight: '500', marginBottom: '6px', color: '#374151' }}>Eser Adı</label>
+              <label style={{ display: 'block', fontWeight: '500', marginBottom: '4px', color: '#374151', fontSize: '0.9rem' }}>Eser Adı</label>
               <input 
                 type="text" 
                 placeholder="Örn: Future Space" 
                 value={title} 
                 onChange={(e) => setTitle(e.target.value)}
                 required
-                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }}
+                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.95rem' }}
               />
             </div>
 
             <div>
-              <label style={{ display: 'block', fontWeight: '500', marginBottom: '6px', color: '#374151' }}>Açıklama</label>
+              <label style={{ display: 'block', fontWeight: '500', marginBottom: '4px', color: '#374151', fontSize: '0.9rem' }}>Açıklama</label>
               <textarea 
                 placeholder="Eseriniz hakkında kısa bilgi verin..." 
                 value={description} 
                 onChange={(e) => setDescription(e.target.value)}
                 rows="3"
-                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }}
+                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.95rem' }}
               />
             </div>
 
             <div>
-              <label style={{ display: 'block', fontWeight: '500', marginBottom: '6px', color: '#374151' }}>Listeleme Süresi</label>
+              <label style={{ display: 'block', fontWeight: '500', marginBottom: '4px', color: '#374151', fontSize: '0.9rem' }}>Listeleme Süresi</label>
               <select 
                 value={duration} 
                 onChange={(e) => setDuration(e.target.value)}
-                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: 'white' }}
+                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: 'white', fontSize: '0.95rem' }}
               >
                 <option value="1">1 Ay (Ücretsiz)</option>
                 <option value="3">3 Ay (Ücretsiz)</option>
@@ -357,20 +352,20 @@ export default function Home() {
             </div>
 
             <div>
-              <label style={{ display: 'block', fontWeight: '500', marginBottom: '6px', color: '#374151' }}>Eser Dosyası (Görsel)</label>
+              <label style={{ display: 'block', fontWeight: '500', marginBottom: '4px', color: '#374151', fontSize: '0.9rem' }}>Eser Dosyası (Görsel)</label>
               <input 
                 type="file" 
                 accept="image/*"
                 onChange={(e) => setImageFile(e.target.files[0])}
                 required
-                style={{ width: '100%', padding: '8px', border: '1px dashed #d1d5db', borderRadius: '6px', backgroundColor: '#f9fafb' }}
+                style={{ width: '100%', padding: '8px', border: '1px dashed #d1d5db', borderRadius: '6px', backgroundColor: '#f9fafb', fontSize: '0.85rem' }}
               />
             </div>
 
             <button 
               type="submit"
               disabled={uploading}
-              style={{ backgroundColor: uploading ? '#9ca3af' : '#059669', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontSize: '1rem', fontWeight: 'bold', cursor: uploading ? 'not-allowed' : 'pointer', marginTop: '10px' }}
+              style={{ backgroundColor: uploading ? '#9ca3af' : '#059669', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontSize: '1rem', fontWeight: 'bold', cursor: uploading ? 'not-allowed' : 'pointer', marginTop: '6px' }}
             >
               {uploading ? 'Yükleniyor...' : 'Hemen Ücretsiz Yayınla'}
             </button>
@@ -380,18 +375,18 @@ export default function Home() {
 
       {/* MODALLAR */}
       {selectedArt && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1100, padding: '20px' }}>
-          <div style={{ backgroundColor: 'white', borderRadius: '16px', maxWidth: '500px', width: '100%', padding: '25px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', position: 'relative' }}>
-            <button onClick={() => setSelectedArt(null)} style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
-            <img src={selectedArt.image} alt={selectedArt.title} style={{ width: '100%', height: '250px', objectFit: 'cover', borderRadius: '10px', marginBottom: '15px' }} />
-            <h2 style={{ fontSize: '1.4rem', color: '#111827', marginBottom: '8px' }}>{selectedArt.title}</h2>
-            <p style={{ fontSize: '0.9rem', color: '#6b7280', marginBottom: '12px' }}>Sanatçı: {selectedArt.artist} ({selectedArt.duration})</p>
-            <p style={{ fontSize: '0.95rem', color: '#374151', marginBottom: '16px' }}>{selectedArt.description}</p>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1100, padding: '16px' }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '450px', width: '100%', padding: '20px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', position: 'relative', maxHeight: '90vh', overflowY: 'auto' }}>
+            <button onClick={() => setSelectedArt(null)} style={{ position: 'absolute', top: '12px', right: '12px', background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+            <img src={selectedArt.image} alt={selectedArt.title} style={{ width: '100%', height: '220px', objectFit: 'cover', borderRadius: '8px', marginBottom: '12px' }} />
+            <h2 style={{ fontSize: '1.25rem', color: '#111827', marginBottom: '6px' }}>{selectedArt.title}</h2>
+            <p style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '10px' }}>Sanatçı: {selectedArt.artist} ({selectedArt.duration})</p>
+            <p style={{ fontSize: '0.9rem', color: '#374151', marginBottom: '14px' }}>{selectedArt.description}</p>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#059669' }}>{selectedArt.price}</span>
+              <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#059669' }}>{selectedArt.price}</span>
               <button 
                 onClick={() => { const art = selectedArt; setSelectedArt(null); triggerBuyProcess(art); }}
-                style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem' }}
               >
                 Hemen Satın Al
               </button>
@@ -401,38 +396,38 @@ export default function Home() {
       )}
 
       {showPaymentModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1100, padding: '20px' }}>
-          <div style={{ backgroundColor: 'white', borderRadius: '16px', maxWidth: '450px', width: '100%', padding: '30px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ fontSize: '1.25rem', color: '#111827', fontWeight: 'bold' }}>Ödeme Yöntemi Seçin</h2>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1100, padding: '16px' }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '420px', width: '100%', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 style={{ fontSize: '1.15rem', color: '#111827', fontWeight: 'bold' }}>Ödeme Yöntemi Seçin</h2>
               <button onClick={() => setShowPaymentModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
             </div>
 
-            <p style={{ fontSize: '0.9rem', color: '#6b7280', marginBottom: '20px' }}>
+            <p style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '16px' }}>
               Lütfen ödemeyi yapmak istediğiniz yöntemi seçin:
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <button 
                 onClick={payWithMetaMask}
-                style={{ backgroundColor: '#f59e0b', color: 'white', border: 'none', padding: '14px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '1rem' }}
+                style={{ backgroundColor: '#f59e0b', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '0.95rem' }}
               >
                 🦊 MetaMask / Web3 Cüzdan ile Öde
               </button>
 
-              <div style={{ border: '1px solid #e5e7eb', borderRadius: '10px', padding: '14px', backgroundColor: '#f9fafb' }}>
-                <p style={{ fontWeight: 'bold', color: '#1f2937', marginBottom: '6px', fontSize: '0.95rem' }}>
+              <div style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '12px', backgroundColor: '#f9fafb' }}>
+                <p style={{ fontWeight: 'bold', color: '#1f2937', marginBottom: '4px', fontSize: '0.9rem' }}>
                   📊 Binance / Paribu / Diğer Borsalar ile Öde
                 </p>
-                <p style={{ fontSize: '0.8rem', color: '#4b5563', marginBottom: '10px' }}>
-                  Aşağıdaki kişisel cüzdan adresimize borsanızdan transfer yapın:
+                <p style={{ fontSize: '0.75rem', color: '#4b5563', marginBottom: '8px' }}>
+                  Aşağıdaki cüzdan adresimize borsanızdan transfer yapın:
                 </p>
-                <div style={{ backgroundColor: 'white', padding: '8px', borderRadius: '6px', border: '1px dashed #d1d5db', fontSize: '0.75rem', wordBreak: 'break-all', fontWeight: 'mono', color: '#374151', marginBottom: '10px' }}>
+                <div style={{ backgroundColor: 'white', padding: '6px', borderRadius: '4px', border: '1px dashed #d1d5db', fontSize: '0.7rem', wordBreak: 'break-all', fontWeight: 'mono', color: '#374151', marginBottom: '8px' }}>
                   {platformWalletAddress}
                 </div>
                 <button 
                   onClick={confirmManualExchangePayment}
-                  style={{ width: '100%', backgroundColor: '#2563eb', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem' }}
+                  style={{ width: '100%', backgroundColor: '#2563eb', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}
                 >
                   Borsadan Transferi Yaptım, Bildir
                 </button>
@@ -443,61 +438,61 @@ export default function Home() {
       )}
 
       {showAuthModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
-          <div style={{ backgroundColor: 'white', borderRadius: '16px', maxWidth: '400px', width: '100%', padding: '30px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ fontSize: '1.25rem', color: '#111827' }}>{authMode === 'login' ? 'Giriş Yap' : 'Üye Ol'}</h2>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '16px' }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '380px', width: '100%', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 style={{ fontSize: '1.15rem', color: '#111827', fontWeight: 'bold' }}>{authMode === 'login' ? 'Giriş Yap' : 'Üye Ol'}</h2>
               <button onClick={() => setShowAuthModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
             </div>
 
-            <form onSubmit={authMode === 'login' ? handleLogin : handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <form onSubmit={authMode === 'login' ? handleLogin : handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {authMode === 'register' && (
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '500', marginBottom: '4px', color: '#374151' }}>Kullanıcı Adı</label>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '500', marginBottom: '4px', color: '#374151' }}>Kullanıcı Adı</label>
                   <input 
                     type="text" 
                     value={username} 
                     onChange={(e) => setUsername(e.target.value)} 
                     placeholder="Adınız" 
                     required 
-                    style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} 
+                    style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.9rem' }} 
                   />
                 </div>
               )}
               <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '500', marginBottom: '4px', color: '#374151' }}>E-posta Adresi</label>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '500', marginBottom: '4px', color: '#374151' }}>E-posta Adresi</label>
                 <input 
                   type="email" 
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)} 
                   placeholder="ornek@mail.com" 
                   required 
-                  style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} 
+                  style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.9rem' }} 
                 />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '500', marginBottom: '4px', color: '#374151' }}>Şifre</label>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '500', marginBottom: '4px', color: '#374151' }}>Şifre</label>
                 <input 
                   type="password" 
                   value={password} 
                   onChange={(e) => setPassword(e.target.value)} 
                   placeholder="********" 
                   required 
-                  style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} 
+                  style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.9rem' }} 
                 />
               </div>
               <button 
                 type="submit" 
-                style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}
+                style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '8px', fontSize: '0.95rem' }}
               >
                 {authMode === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}
               </button>
             </form>
 
-            <div style={{ textAlign: 'center', marginTop: '16px' }}>
+            <div style={{ textAlign: 'center', marginTop: '14px' }}>
               <button 
                 onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
-                style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', fontSize: '0.85rem' }}
+                style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', fontSize: '0.8rem' }}
               >
                 {authMode === 'login' ? 'Hesabınız yok mu? Üye olun' : 'Zaten hesabınız var mı? Giriş yapın'}
               </button>
