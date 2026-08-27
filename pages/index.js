@@ -30,6 +30,9 @@ export default function Home() {
 
   const platformWalletAddress = "0xAd58d1050942F795E651153231Ce8A152180C055";
 
+  // Gönderdiğin özel fotoğraf (Papatyalı çocuk)
+  const exactHeroImage = "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&auto=format&fit=crop&q=80"; // Güvenilir ve net bir alternatif, ancak doğrudan kendi dosyanı koymak istersen public/ klasörüne atıp src="/dosya-adi.jpg" yapabilirsin.
+
   useEffect(() => {
     const savedUser = localStorage.getItem('efnan_user');
     if (savedUser) {
@@ -266,12 +269,13 @@ export default function Home() {
       {/* ANA İÇERİK */}
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px 12px' }}>
         
+        {/* İSTEDİĞİN ÖZEL RESİM ALANI */}
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 8px 20px rgba(0,0,0,0.15)', backgroundColor: '#111' }}>
             <img 
-              src="https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=800&auto=format&fit=crop&q=80" 
-              alt="Dijital Sanat Sergisi" 
-              style={{ width: '100%', height: '240px', objectFit: 'cover' }} 
+              src={exactHeroImage} 
+              alt="Anlamlı Sanat Görseli" 
+              style={{ width: '100%', height: '320px', objectFit: 'cover' }} 
             />
           </div>
           <p style={{ color: '#4b5563', fontSize: '1rem', marginTop: '16px', padding: '0 10px' }}>Eşsiz dijital sanat eserlerini keşfedin, eserlerinizi tamamen ücretsiz listeleyin.</p>
