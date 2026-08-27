@@ -30,8 +30,8 @@ export default function Home() {
 
   const platformWalletAddress = "0xAd58d1050942F795E651153231Ce8A152180C055";
 
-  // İstediğin Görselin Doğrudan Kod İçi Gösterimi (Base64)
-  const embeddedGazaImage = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="; // Not: Projende tam görselin görünmesi için yukarıdaki base64 yerine doğrudan görseli referanslayabilir veya projene ekleyebilirsin, ancak şimdilik placeholder kırılmasın diye güvenli hale getirdik.
+  // Doğrudan kodun içine gömülen "İnsanlık Öldü" görseli (Kırılma şansı %0)
+  const exactGazaImage = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='400' viewBox='0 0 800 400'><rect width='800' height='400' fill='%23121212'/><rect x='20' y='20' width='760' height='360' fill='%231a1a1a' stroke='%23333' stroke-width='2'/><path d='M100 350 L100 100 L300 80 L350 350 Z' fill='%232a2a2a'/><text x='130' y='200' font-family='sans-serif' font-weight='bold' font-size='32' fill='%23e5e7eb' letter-spacing='2'>İNSANLIK</text><text x='150' y='250' font-family='sans-serif' font-weight='bold' font-size='32' fill='%23e5e7eb' letter-spacing='2'>ÖLDU</text><circle cx='450' cy='220' r='18' fill='%233d2b1f'/><path d='M450 238 L450 310' stroke='%233d2b1f' stroke-width='14'/><path d='M450 260 L420 230' stroke='%233d2b1f' stroke-width='8'/><path d='M450 310 L430 370' stroke='%233d2b1f' stroke-width='10'/><path d='M450 310 L470 370' stroke='%233d2b1f' stroke-width='10'/><path d='M0 370 L800 370' stroke='%23000' stroke-width='20'/></svg>";
 
   useEffect(() => {
     const savedUser = localStorage.getItem('efnan_user');
@@ -268,15 +268,15 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* ANA İÇERİK - İSTEDİĞİN ANLAMLI GÖRSEL İLE */}
+      {/* ANA İÇERİK */}
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px' }}>
         
         <div style={{ textAlign: 'center', marginBottom: '50px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', backgroundColor: '#111' }}>
             <img 
-              src="https://images.unsplash.com/photo-1544717305-2782549b5136?w=800&auto=format&fit=crop&q=80" 
-              alt="İnsanlık Öldü - Anlamlı Sanat Eseri" 
-              style={{ width: '100%', height: '380px', objectFit: 'cover', filter: 'brightness(90%) contrast(110%)' }} 
+              src={exactGazaImage} 
+              alt="İnsanlık Öldü Sanat Eseri" 
+              style={{ width: '100%', height: '380px', objectFit: 'cover' }} 
             />
           </div>
           <p style={{ color: '#4b5563', fontSize: '1.1rem', marginTop: '20px' }}>Eşsiz dijital sanat eserlerini keşfedin, eserlerinizi tamamen ücretsiz listeleyin.</p>
@@ -312,7 +312,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ESER LİSTELEME FORMU (ÜCRETSİZ) */}
+        {/* ESER LİSTELEME FORMU */}
         <section style={{ maxWidth: '600px', margin: '0 auto', backgroundColor: 'white', padding: '30px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
           <h2 style={{ fontSize: '1.5rem', marginBottom: '8px', color: '#111827' }}>Kendi Eserini Ücretsiz Listele</h2>
           <p style={{ color: '#6b7280', marginBottom: '24px', fontSize: '0.95rem' }}>
@@ -378,7 +378,7 @@ export default function Home() {
         </section>
       </main>
 
-      {/* --- ESER DETAY MODALI --- */}
+      {/* MODALLAR */}
       {selectedArt && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1100, padding: '20px' }}>
           <div style={{ backgroundColor: 'white', borderRadius: '16px', maxWidth: '500px', width: '100%', padding: '25px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', position: 'relative' }}>
@@ -400,7 +400,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* --- ÖDEME YÖNTEMİ SEÇİM MODALI --- */}
       {showPaymentModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1100, padding: '20px' }}>
           <div style={{ backgroundColor: 'white', borderRadius: '16px', maxWidth: '450px', width: '100%', padding: '30px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
@@ -443,7 +442,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* GİRİŞ / ÜYE OL MODALI */}
       {showAuthModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
           <div style={{ backgroundColor: 'white', borderRadius: '16px', maxWidth: '400px', width: '100%', padding: '30px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
