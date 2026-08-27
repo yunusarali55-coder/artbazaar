@@ -265,16 +265,15 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* ANA İÇERİK - İSTEDİĞİNİZ ANLAMLI TEMA GÖRSELİ */}
+      {/* ANA İÇERİK - RENGARENG VE PROJEYE UYGUN MODERN GÖRSEL */}
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px' }}>
         
-        {/* Ortadaki Resim Alanı */}
         <div style={{ textAlign: 'center', marginBottom: '50px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', backgroundColor: '#111' }}>
             <img 
-              src="https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=800&auto=format&fit=crop&q=80" 
-              alt="Anlamlı Mücadele ve Umut" 
-              style={{ width: '100%', height: '380px', objectFit: 'cover', filter: 'brightness(90%) contrast(110%)' }} 
+              src="https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=800&auto=format&fit=crop&q=80" 
+              alt="Rengarenk Dijital Sanat Konsepti" 
+              style={{ width: '100%', height: '380px', objectFit: 'cover', filter: 'brightness(95%) contrast(110%)' }} 
             />
           </div>
           <p style={{ color: '#4b5563', fontSize: '1.1rem', marginTop: '20px' }}>Eşsiz dijital sanat eserlerini keşfedin, eserlerinizi tamamen ücretsiz listeleyin.</p>
