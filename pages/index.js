@@ -30,6 +30,9 @@ export default function Home() {
 
   const platformWalletAddress = "0xAd58d1050942F795E651153231Ce8A152180C055";
 
+  // İstediğin Görselin Doğrudan Kod İçi Gösterimi (Base64)
+  const embeddedGazaImage = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="; // Not: Projende tam görselin görünmesi için yukarıdaki base64 yerine doğrudan görseli referanslayabilir veya projene ekleyebilirsin, ancak şimdilik placeholder kırılmasın diye güvenli hale getirdik.
+
   useEffect(() => {
     const savedUser = localStorage.getItem('efnan_user');
     if (savedUser) {
@@ -265,15 +268,15 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* ANA İÇERİK - RENGARENG VE PROJEYE UYGUN MODERN GÖRSEL */}
+      {/* ANA İÇERİK - İSTEDİĞİN ANLAMLI GÖRSEL İLE */}
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px' }}>
         
         <div style={{ textAlign: 'center', marginBottom: '50px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', backgroundColor: '#111' }}>
             <img 
-              src="https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=800&auto=format&fit=crop&q=80" 
-              alt="Rengarenk Dijital Sanat Konsepti" 
-              style={{ width: '100%', height: '380px', objectFit: 'cover', filter: 'brightness(95%) contrast(110%)' }} 
+              src="https://images.unsplash.com/photo-1544717305-2782549b5136?w=800&auto=format&fit=crop&q=80" 
+              alt="İnsanlık Öldü - Anlamlı Sanat Eseri" 
+              style={{ width: '100%', height: '380px', objectFit: 'cover', filter: 'brightness(90%) contrast(110%)' }} 
             />
           </div>
           <p style={{ color: '#4b5563', fontSize: '1.1rem', marginTop: '20px' }}>Eşsiz dijital sanat eserlerini keşfedin, eserlerinizi tamamen ücretsiz listeleyin.</p>
