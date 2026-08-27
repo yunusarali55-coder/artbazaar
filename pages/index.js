@@ -21,17 +21,17 @@ export default function Home() {
   const [uploading, setUploading] = useState(false);
   const [selectedArt, setSelectedArt] = useState(null);
 
-  // --- ÖDEME YÖNTEMİ SEÇİM MODALI STATE'LERİ ---
+  // --- ÖDEME YÖNTEMİ SEÇİM MODALI STATE'LERİ (Sadece Satın Alım İçin) ---
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [pendingActionType, setPendingActionType] = useState(null); // 'listing' veya 'buy'
-  const [pendingArtData, setPendingArtData] = useState(null); // Satın alınacak eser bilgisi
+  const [pendingActionType, setPendingActionType] = useState(null); 
+  const [pendingArtData, setPendingArtData] = useState(null); 
 
   const [listings, setListings] = useState([
     { id: 1, title: 'Cyber Mona Lisa', description: 'Yapay zeka ve rönesans sanatının dijital sentezi.', artist: '0x123...ABCD', price: '0.04 ETH', duration: '3 Ay', image: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=500&auto=format&fit=crop&q=60' },
     { id: 2, title: 'Abstract Neon', description: 'Geleceğin sokak kültüründen ilham alan neon kompozisyon.', artist: '0x987...WXYZ', price: '0.004 ETH', duration: '1 Ay', image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60' }
   ]);
 
-  // Senin Kişisel Cüzdan Adresin
+  // Senin Kişisel Cüzdan Adresin (%10 Komisyonun Geleceği Adres)
   const platformWalletAddress = "0xAd58d1050942F795E651153231Ce8A152180C055";
 
   useEffect(() => {
@@ -96,7 +96,7 @@ export default function Home() {
     }
   };
 
-  // --- ESER LİSTELEME BAŞLANGICI (ÜCRETSİZ) ---
+  // --- ESER LİSTELEME (ÜCRETSİZ) ---
   const triggerListingProcess = (e) => {
     e.preventDefault();
     if (!currentUser) {
@@ -109,23 +109,33 @@ export default function Home() {
       return;
     }
 
-    // Listeleme tamamen ücretsiz olduğu için doğrudan ürünü yayına alıyoruz
-    const imageUrl = URL.createObjectURL(imageFile);
-    const newListing = {
-      id: listings.length + 1,
-      title: title,
-      description: description || 'Sanatçı tarafından açıklama girilmedi.',
-      artist: currentUser.username,
-      price: '0.015 ETH', // Varsayılan başlangıç satış fiyatı
-      duration: `${duration} Ay`,
-      image: imageUrl
-    };
+    setUploading(true);
 
-    setListings([newListing, ...listings]);
-    alert(`Tebrikler! Eseriniz hiçbir ücret ödemeden ${duration} aylığına başarıyla listelendi!`);
-    setTitle('');
-    setDescription('');
-    setImageFile(null);
+    const reader = new FileReader();
+    reader.readAsDataURL(imageFile);
+    reader.onload = () => {
+      const base64Image = reader.result;
+      const newListing = {
+        id: listings.length + 1,
+        title: title,
+        description: description || 'Sanatçı tarafından açıklama girilmedi.',
+        artist: currentUser.username,
+        price: '0.015 ETH', 
+        duration: `${duration} Ay`,
+        image: base64Image
+      };
+
+      setListings([newListing, ...listings]);
+      alert(`Tebrikler! Eseriniz hiçbir ücret ödemeden ${duration} aylığına başarıyla listelendi!`);
+      setTitle('');
+      setDescription('');
+      setImageFile(null);
+      setUploading(false);
+    };
+    reader.onerror = () => {
+      alert('Görsel yüklenirken bir hata oluştu.');
+      setUploading(false);
+    };
   };
 
   const triggerBuyProcess = (art) => {
@@ -160,7 +170,7 @@ export default function Home() {
       if (pendingActionType === 'buy' && pendingArtData) {
         const numericPrice = parseFloat(pendingArtData.price.replace(' ETH', '')) || 0.01;
         const totalWei = ethers.utils.parseEther(numericPrice.toString());
-        const commissionWei = totalWei.mul(10).div(100); // %10 Komisyon
+        const commissionWei = totalWei.mul(10).div(100); 
 
         alert(`${pendingArtData.title} için ödeme yapılıyor. %10 platform komisyonu cüzdanınıza aktarılıyor...`);
 
@@ -182,12 +192,11 @@ export default function Home() {
     }
   };
 
-  // --- BİNANCE / BORSALAR İÇİN MANUEL ONAY (SADECE SATIN ALMA İÇİN) ---
   const confirmManualExchangePayment = () => {
     setShowPaymentModal(false);
 
     if (pendingActionType === 'buy' && pendingArtData) {
-      alert(`"${pendingArtData.title}" için borsa transfer bildiriminiz alındı! Kontrol edildikten sonra eser sahipliği size aktarılacaktır.`);
+      alert(`"${pendingArtData.title}" için borsa transfer bildiriminiz alındı!`);
     }
 
     setPendingActionType(null);
@@ -203,9 +212,52 @@ export default function Home() {
 
       {/* ÜST MENÜ */}
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 2rem', backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', position: 'sticky', top: 0, zIndex: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.25rem', fontWeight: 'bold', color: '#1f2937' }}>
-          <span>🎨</span> Efnan ArtBazaar
+        
+        {/* LOGO / SİTE İSMİ (Arka planda çaresiz çocuk görseli ve renkli harfler) */}
+        <div style={{ 
+          position: 'relative', 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '12px', 
+          padding: '10px 18px', 
+          borderRadius: '10px', 
+          overflow: 'hidden',
+          boxShadow: 'inset 0 0 15px rgba(0,0,0,0.6)'
+        }}>
+          {/* Arka Plan Görseli: Filistin'deki dramı ve çaresiz çocuğu simgeleyen tonlu görsel */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1542838132-92c53300491e?w=600&auto=format&fit=crop&q=80')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            filter: 'grayscale(30%) contrast(120%)',
+            zIndex: 1
+          }}></div>
+
+          <span style={{ fontSize: '1.4rem', zIndex: 2 }}>🕊️</span>
+          
+          <div style={{ fontSize: '1.35rem', fontWeight: '900', zIndex: 2, letterSpacing: '0.5px', textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
+            <span style={{ color: '#ff4d4d' }}>E</span>
+            <span style={{ color: '#ffa500' }}>f</span>
+            <span style={{ color: '#ffff33' }}>n</span>
+            <span style={{ color: '#33cc33' }}>a</span>
+            <span style={{ color: '#3399ff' }}>n </span>
+            <span style={{ color: '#cc33ff' }}>A</span>
+            <span style={{ color: '#ff66b2' }}>r</span>
+            <span style={{ color: '#00ffff' }}>t</span>
+            <span style={{ color: '#ff9900' }}>B</span>
+            <span style={{ color: '#99ff33' }}>a</span>
+            <span style={{ color: '#ff3366' }}>z</span>
+            <span style={{ color: '#33ffff' }}>a</span>
+            <span style={{ color: '#ffff66' }}>a</span>
+            <span style={{ color: '#ff33ff' }}>r</span>
+          </div>
         </div>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {currentUser ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -331,11 +383,33 @@ export default function Home() {
               disabled={uploading}
               style={{ backgroundColor: uploading ? '#9ca3af' : '#059669', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontSize: '1rem', fontWeight: 'bold', cursor: uploading ? 'not-allowed' : 'pointer', marginTop: '10px' }}
             >
-              {uploading ? 'İşlem Yapılıyor...' : 'Hemen Ücretsiz Yayınla'}
+              {uploading ? 'Yükleniyor...' : 'Hemen Ücretsiz Yayınla'}
             </button>
           </form>
         </section>
       </main>
+
+      {/* --- ESER DETAY MODALI --- */}
+      {selectedArt && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1100, padding: '20px' }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '16px', maxWidth: '500px', width: '100%', padding: '25px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', position: 'relative' }}>
+            <button onClick={() => setSelectedArt(null)} style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+            <img src={selectedArt.image} alt={selectedArt.title} style={{ width: '100%', height: '250px', objectFit: 'cover', borderRadius: '10px', marginBottom: '15px' }} />
+            <h2 style={{ fontSize: '1.4rem', color: '#111827', marginBottom: '8px' }}>{selectedArt.title}</h2>
+            <p style={{ fontSize: '0.9rem', color: '#6b7280', marginBottom: '12px' }}>Sanatçı: {selectedArt.artist} ({selectedArt.duration})</p>
+            <p style={{ fontSize: '0.95rem', color: '#374151', marginBottom: '16px' }}>{selectedArt.description}</p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#059669' }}>{selectedArt.price}</span>
+              <button 
+                onClick={() => { const art = selectedArt; setSelectedArt(null); triggerBuyProcess(art); }}
+                style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                Hemen Satın Al
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* --- ÖDEME YÖNTEMİ SEÇİM MODALI --- */}
       {showPaymentModal && (
@@ -420,60 +494,26 @@ export default function Home() {
                   type="password" 
                   value={password} 
                   onChange={(e) => setPassword(e.target.value)} 
-                  placeholder="••••••••" 
+                  placeholder="********" 
                   required 
                   style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} 
                 />
               </div>
-
               <button 
-                type="submit"
-                style={{ backgroundColor: '#4f46e5', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}
+                type="submit" 
+                style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}
               >
                 {authMode === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}
               </button>
             </form>
 
-            <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '0.9rem' }}>
-              {authMode === 'login' ? (
-                <p>Hesabınız yok mu? <span onClick={() => setAuthMode('register')} style={{ color: '#4f46e5', cursor: 'pointer', fontWeight: 'bold' }}>Üye Olun</span></p>
-              ) : (
-                <p>Zaten hesabınız var mı? <span onClick={() => setAuthMode('login')} style={{ color: '#4f46e5', cursor: 'pointer', fontWeight: 'bold' }}>Giriş Yapın</span></p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ESER DETAY MODALI */}
-      {selectedArt && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100, padding: '20px' }}>
-          <div style={{ backgroundColor: 'white', borderRadius: '16px', maxWidth: '500px', width: '100%', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
-            <img src={selectedArt.image} alt={selectedArt.title} style={{ width: '100%', height: '300px', objectFit: 'cover' }} />
-            <div style={{ padding: '24px' }}>
-              <h2 style={{ fontSize: '1.5rem', marginBottom: '8px', color: '#111827' }}>{selectedArt.title}</h2>
-              <p style={{ color: '#4b5563', fontSize: '0.95rem', marginBottom: '16px' }}>{selectedArt.description}</p>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', fontSize: '0.9rem', color: '#6b7280' }}>
-                <span>Sanatçı: <b>{selectedArt.artist}</b></span>
-                <span>Süre: <b>{selectedArgDuration || selectedArt.duration}</b></span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #e5e7eb', paddingTop: '16px' }}>
-                <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#059669' }}>{selectedArt.price}</span>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <button 
-                    onClick={() => setSelectedArt(null)}
-                    style={{ backgroundColor: '#e5e7eb', color: '#374151', border: 'none', padding: '10px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
-                  >
-                    Kapat
-                  </button>
-                  <button 
-                    onClick={() => { triggerBuyProcess(selectedArt); setSelectedArt(null); }}
-                    style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
-                  >
-                    Satın Al (Ödeme Seç)
-                  </button>
-                </div>
-              </div>
+            <div style={{ textAlign: 'center', marginTop: '16px' }}>
+              <button 
+                onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
+                style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', fontSize: '0.85rem' }}
+              >
+                {authMode === 'login' ? 'Hesabınız yok mu? Üye olun' : 'Zaten hesabınız var mı? Giriş yapın'}
+              </button>
             </div>
           </div>
         </div>
