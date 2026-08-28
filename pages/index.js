@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
-import { ethers } from 'ethers';
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = 'https://ftfhfwiqbwfxolebcqdx.supabase.co';
@@ -15,8 +14,6 @@ export default function Home() {
   const [username, setUsername] = useState('');
   const [showAuthModal, setShowAuthModal] = useState(false);
 
-  const [account, setAccount] = useState('');
-  const [balance, setBalance] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [phone, setPhone] = useState('');
@@ -32,8 +29,8 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState('explore');
 
   const [listings, setListings] = useState([
-    { id: 1, title: 'Neon Rüya', description: 'Renklerin ve neon ışıkların büyüleyici dansı.', artist: 'Yunus Aralı', phone: '05551112233', price: '0.05 ETH', duration: '1 Ay', image: 'https://picsum.photos/seed/art1/1200/800', status: 'Satışta' },
-    { id: 2, title: 'Kozmik Yansımalar', description: 'Uzayın ve derinlik algısının harmanlandığı eser.', artist: 'Efnan Sanat', phone: '05324445566', price: '0.08 ETH', duration: '1 Ay', image: 'https://picsum.photos/seed/art2/1200/800', status: 'Satışta' }
+    { id: 1, title: 'Neon Rüya', description: 'Renklerin ve neon ışıkların büyüleyici dansı.', artist: 'Yunus Aralı', phone: '05551112233', price: '0.05 ETH', duration: 'Süresiz / Yayında', image: 'https://picsum.photos/seed/art1/1200/800', status: 'Satışta' },
+    { id: 2, title: 'Kozmik Yansımalar', description: 'Uzayın ve derinlik algısının harmanlandığı eser.', artist: 'Efnan Sanat', phone: '05324445566', price: '0.08 ETH', duration: 'Süresiz / Yayında', image: 'https://picsum.photos/seed/art2/1200/800', status: 'Satışta' }
   ]);
 
   const platformWalletAddress = "0xAd58d1050942F795E651153231Ce8A152180C055";
@@ -64,8 +61,8 @@ export default function Home() {
           artist: art.artist || 'Anonim',
           phone: art.phone || 'Belirtilmedi',
           price: art.price ? `${art.price} ETH` : '0.015 ETH',
-          duration: '1 Ay',
-          image: art.image_url,
+          duration: 'Süresiz / Yayında',
+          image: art.image_url || exactHeroImage,
           status: 'Satışta'
         }));
         setListings(prev => [...formattedArtworks, ...prev]);
@@ -98,43 +95,33 @@ export default function Home() {
   const handleLogout = () => {
     localStorage.removeItem('efnan_user');
     setCurrentUser(null);
-    setAccount('');
     alert('Çıkış yapıldı.');
   };
 
+  // Eser Ekleme Fonksiyonu (Galeriden, Bilgisayardan veya Flash Bellekten seçilen dosyayı doğrudan işler ve kalıcı kaydeder)
   const triggerListingProcess = async (e) => {
     e.preventDefault();
     if (!currentUser) {
-      alert('Eser listelemek için giriş yapmalısınız!');
+      alert('Eser listelemek için önce giriş yapmalısınız!');
       setShowAuthModal(true);
       return;
     }
+
     if (!imageFile) {
-      alert('Lütfen bir görsel seçin!');
+      alert('Lütfen cihazınızdan/galerinizden bir eser görseli seçin.');
       return;
     }
 
     setUploading(true);
 
     try {
-      const fileExt = imageFile.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('art-images')
-        .upload(fileName, imageFile, { cacheControl: '3600', upsert: false });
-
-      if (uploadError) {
-        alert('Görsel yüklenemedi: ' + uploadError.message);
-        setUploading(false);
-        return;
-      }
-
-      const { data: publicUrlData } = supabase.storage
-        .from('art-images')
-        .getPublicUrl(fileName);
-
-      const imageUrl = publicUrlData.publicUrl;
+      // Seçilen görseli okuyup veritabanına işlenebilir formata çeviriyoruz
+      const imageUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+        reader.readAsDataURL(imageFile);
+      });
 
       const { error: insertError } = await supabase
         .from('artworks')
@@ -150,9 +137,9 @@ export default function Home() {
         ]);
 
       if (insertError) {
-        alert('Veritabanı kayıt hatası: ' + insertError.message);
+        alert('Eser eklenirken hata oluştu: ' + insertError.message);
       } else {
-        alert('Eseriniz başarıyla ve ücretsiz listelendi!');
+        alert('Eseriniz başarıyla yüklendi! Satılana veya siz kaldırana kadar vitrinde kalacaktır.');
         setTitle('');
         setDescription('');
         setPhone('');
@@ -160,7 +147,7 @@ export default function Home() {
         fetchArtworksFromSupabase();
       }
     } catch (err) {
-      alert('Hata oluştu: ' + err.message);
+      alert('Dosya işlenirken bir hata oluştu: ' + err.message);
     } finally {
       setUploading(false);
     }
@@ -241,7 +228,7 @@ export default function Home() {
             </div>
 
             <section style={{ marginBottom: '40px' }}>
-              <h2 style={{ fontSize: '1.3rem', marginBottom: '14px', color: '#1f2937' }}>Vitrin</h2>
+              <h2 style={{ fontSize: '1.3rem', marginBottom: '14px', color: '#1f2937' }}>Vitrin (Süresiz Yayında)</h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
                 {listings.map((art) => (
                   <div key={art.id} onClick={() => setSelectedArt(art)} style={{ backgroundColor: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', cursor: 'pointer' }}>
@@ -250,6 +237,7 @@ export default function Home() {
                       <h3 style={{ fontSize: '1rem', fontWeight: 'bold' }}>{art.title}</h3>
                       <p style={{ fontSize: '0.8rem', color: '#6b7280' }}>Sanatçı: {art.artist}</p>
                       <p style={{ fontSize: '0.8rem', color: '#059669' }}>📞 İletişim: {art.phone}</p>
+                      <p style={{ fontSize: '0.75rem', color: '#d97706', marginTop: '2px' }}>⏳ Durum: {art.duration}</p>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
                         <span style={{ fontWeight: 'bold', color: '#059669' }}>{art.price}</span>
                         <button onClick={(e) => { e.stopPropagation(); triggerBuyProcess(art); }} style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '6px 10px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 'bold' }}>Satın Al</button>
@@ -261,14 +249,21 @@ export default function Home() {
             </section>
 
             <section style={{ maxWidth: '600px', margin: '0 auto', backgroundColor: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-              <h2 style={{ fontSize: '1.2rem', marginBottom: '10px' }}>Kendi Eserini Ücretsiz Listele</h2>
+              <h2 style={{ fontSize: '1.2rem', marginBottom: '6px' }}>Kendi Eserini Ekle (Galeriden / Cihazdan)</h2>
+              <p style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: '14px' }}>Yüklediğiniz eser siz kaldırana veya satılana kadar vitrinde süresiz kalır.</p>
+              
               <form onSubmit={triggerListingProcess} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <input type="text" placeholder="Eser Adı" value={title} onChange={(e) => setTitle(e.target.value)} required style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
-                <textarea placeholder="Açıklama" value={description} onChange={(e) => setDescription(e.target.value)} rows="2" style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
+                <textarea placeholder="Eser Açıklaması" value={description} onChange={(e) => setDescription(e.target.value)} rows="2" style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
                 <input type="text" placeholder="İletişim / Telefon Numarası (Örn: 0555...)" value={phone} onChange={(e) => setPhone(e.target.value)} required style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
-                <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files[0])} required style={{ padding: '6px' }} />
-                <button type="submit" disabled={uploading} style={{ backgroundColor: uploading ? '#9ca3af' : '#059669', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
-                  {uploading ? 'Yükleniyor...' : 'Ücretsiz Yayınla'}
+                
+                <div style={{ border: '1px dashed #d1d5db', padding: '10px', borderRadius: '6px', backgroundColor: '#f9fafb' }}>
+                  <label style={{ fontSize: '0.85rem', color: '#374151', display: 'block', marginBottom: '4px' }}>Görsel Seç (Galeri, Dosya, Flash Bellek vb.):</label>
+                  <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files[0])} required style={{ width: '100%' }} />
+                </div>
+
+                <button type="submit" disabled={uploading} style={{ backgroundColor: uploading ? '#9ca3af' : '#059669', color: 'white', border: 'none', padding: '12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
+                  {uploading ? 'Yükleniyor ve Vitrine Ekleniyor...' : 'Eseri Vitrine Ekle'}
                 </button>
               </form>
             </section>
@@ -338,7 +333,7 @@ export default function Home() {
       )}
 
       {selectedArt && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1100, padding: '16px' }}>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: '1100', padding: '16px' }}>
           <div style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '400px', width: '100%', padding: '20px', position: 'relative' }}>
             <button onClick={() => setSelectedArt(null)} style={{ position: 'absolute', top: '10px', right: '10px', border: 'none', background: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
             <img src={selectedArt.image} alt={selectedArt.title} style={{ width: '100%', height: '180px', objectFit: 'cover', borderRadius: '8px', marginBottom: '10px' }} />
