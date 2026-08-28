@@ -29,7 +29,6 @@ export default function Home() {
   const [pendingActionType, setPendingActionType] = useState(null); 
   const [pendingArtData, setPendingArtData] = useState(null); 
 
-  // Vitrin boş kalmasın diye örnek tabloları doğrudan başlangıç verisi olarak yüklüyoruz
   const [listings, setListings] = useState([
     { id: 1, title: 'Neon Rüya', description: 'Renklerin ve neon ışıkların büyüleyici dansı.', artist: 'Yunus Aralı', price: '0.05 ETH', duration: '1 Ay', image: 'https://picsum.photos/seed/art1/1200/800' },
     { id: 2, title: 'Kozmik Yansımalar', description: 'Uzayın ve derinlik algısının harmanlandığı eser.', artist: 'Efnan Sanat', price: '0.08 ETH', duration: '1 Ay', image: 'https://picsum.photos/seed/art2/1200/800' },
@@ -151,6 +150,7 @@ export default function Home() {
       const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `${fileName}`;
 
+      // Kesin ve doğru kovan adı: art-images
       const { error: uploadError } = await supabase.storage
         .from('art-images')
         .upload(filePath, imageFile);
@@ -190,6 +190,7 @@ export default function Home() {
       }
     } catch (err) {
       console.error('İşlem hatası:', err);
+      alert('Beklenmeyen bir hata oluştu: ' + err.message);
     } finally {
       setUploading(false);
     }
@@ -264,7 +265,6 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
 
-      {/* ÜST MENÜ */}
       <nav style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', position: 'sticky', top: 0, zIndex: 10, gap: '10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderRadius: '8px', backgroundColor: '#222', boxShadow: 'inset 0 0 10px rgba(0,0,0,0.6)' }}>
           <span style={{ fontSize: '1.2rem' }}>🕊️</span>
@@ -302,7 +302,6 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* ANA İÇERİK */}
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px 12px' }}>
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 8px 20px rgba(0,0,0,0.15)', backgroundColor: '#111' }}>
@@ -330,7 +329,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ESER LİSTELEME FORMU */}
         <section style={{ maxWidth: '600px', margin: '0 auto', backgroundColor: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
           <h2 style={{ fontSize: '1.35rem', marginBottom: '6px', color: '#111827' }}>Kendi Eserini Ücretsiz Listele</h2>
           <p style={{ color: '#6b7280', marginBottom: '18px', fontSize: '0.9rem' }}>Eserinizi dilediğiniz süre seçeneğiyle pazaryerinde tamamen ücretsiz sergileyin.</p>
@@ -362,7 +360,6 @@ export default function Home() {
         </section>
       </main>
 
-      {/* MODALLAR */}
       {selectedArt && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1100, padding: '16px' }}>
           <div style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '450px', width: '100%', padding: '20px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', position: 'relative', maxHeight: '90vh', overflowY: 'auto' }}>
