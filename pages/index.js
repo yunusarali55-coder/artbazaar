@@ -98,7 +98,7 @@ export default function Home() {
     alert('Çıkış yapıldı.');
   };
 
-  // Eser Ekleme Fonksiyonu (Galeriden, Bilgisayardan veya Flash Bellekten seçilen dosyayı doğrudan işler ve kalıcı kaydeder)
+  // Eser Ekleme Fonksiyonu (Görseli otomatik sıkıştırıp boyutu küçülterek hatayı engeller)
   const triggerListingProcess = async (e) => {
     e.preventDefault();
     if (!currentUser) {
@@ -115,12 +115,41 @@ export default function Home() {
     setUploading(true);
 
     try {
-      // Seçilen görseli okuyup veritabanına işlenebilir formata çeviriyoruz
-      const imageUrl = await new Promise((resolve, reject) => {
+      const compressedImageUrl = await new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
         reader.readAsDataURL(imageFile);
+        reader.onload = (event) => {
+          const img = new Image();
+          img.src = event.target.result;
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 800;
+            const MAX_HEIGHT = 800;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > MAX_WIDTH) {
+                height *= MAX_WIDTH / width;
+                width = MAX_WIDTH;
+              }
+            } else {
+              if (height > MAX_HEIGHT) {
+                width *= MAX_HEIGHT / height;
+                height = MAX_HEIGHT;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            resolve(canvas.toDataURL('image/jpeg', 0.7));
+          };
+          img.onerror = (error) => reject(error);
+        };
+        reader.onerror = (error) => reject(error);
       });
 
       const { error: insertError } = await supabase
@@ -130,16 +159,17 @@ export default function Home() {
             title, 
             description: description || 'Açıklama yok', 
             price: 0.015, 
-            image_url: imageUrl, 
+            image_url: compressedImageUrl, 
             artist: currentUser.username,
             phone: phone || 'Belirtilmedi'
           }
         ]);
 
       if (insertError) {
+        console.error('Supabase Kayıt Hatası:', insertError);
         alert('Eser eklenirken hata oluştu: ' + insertError.message);
       } else {
-        alert('Eseriniz başarıyla yüklendi! Satılana veya siz kaldırana kadar vitrinde kalacaktır.');
+        alert('Eseriniz başarıyla yüklendi ve vitrine eklendi!');
         setTitle('');
         setDescription('');
         setPhone('');
@@ -147,7 +177,8 @@ export default function Home() {
         fetchArtworksFromSupabase();
       }
     } catch (err) {
-      alert('Dosya işlenirken bir hata oluştu: ' + err.message);
+      console.error('İşlem Hatası:', err);
+      alert('Dosya işlenirken veya yüklenirken hata oluştu: ' + err.message);
     } finally {
       setUploading(false);
     }
@@ -300,6 +331,31 @@ export default function Home() {
         )}
       </main>
 
+      {showAuthModal && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1100, padding: '16px' }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '360px', width: '100%', padding: '20px' }}>
+            <h3>{authMode === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}</h3>
+            <form onSubmit={authMode === 'login' ? handleLogin : handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px' }}>
+              {authMode === 'register' && (
+                <input type="text" placeholder="Kullanıcı Adı" value={username} onChange={(e) => setUsername(e.target.value)} required style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
+              )}
+              <input type="email" placeholder="E-posta" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
+              <input type="password" placeholder="Şifre" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
+              
+              <button type="submit" style={{ backgroundColor: '#4f46e5', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
+                {authMode === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}
+              </button>
+            </form>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', fontSize: '0.85rem' }}>
+              <button onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')} style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer' }}>
+                {authMode === 'login' ? 'Hesabın yok mu? Kayıt ol' : 'Zaten hesabın var mı? Giriş yap'}
+              </button>
+              <button onClick={() => setShowAuthModal(false)} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer' }}>İptal</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showPaymentModal && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1100, padding: '16px' }}>
           <div style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '400px', width: '100%', padding: '20px' }}>
@@ -345,30 +401,6 @@ export default function Home() {
               <span style={{ fontWeight: 'bold', color: '#059669' }}>{selectedArt.price}</span>
               <button onClick={() => { const art = selectedArt; setSelectedArt(null); triggerBuyProcess(art); }} style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '8px 14px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>Satın Al</button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {showAuthModal && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1100, padding: '16px' }}>
-          <div style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '380px', width: '100%', padding: '20px', position: 'relative' }}>
-            <button onClick={() => setShowAuthModal(false)} style={{ position: 'absolute', top: '10px', right: '10px', border: 'none', background: 'none', fontSize: '1.2rem' }}>✕</button>
-            <h3>{authMode === 'login' ? 'Giriş Yap' : 'Üye Ol'}</h3>
-            <form onSubmit={authMode === 'login' ? handleLogin : handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
-              {authMode === 'register' && (
-                <input type="text" placeholder="Kullanıcı Adı" value={username} onChange={(e) => setUsername(e.target.value)} required style={{ padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
-              )}
-              <input type="email" placeholder="E-posta" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
-              <input type="password" placeholder="Şifre" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
-              <button type="submit" style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
-                {authMode === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}
-              </button>
-            </form>
-            <p style={{ textAlign: 'center', marginTop: '10px', fontSize: '0.8rem', color: '#6b7280' }}>
-              <span onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')} style={{ color: '#4f46e5', cursor: 'pointer', fontWeight: 'bold' }}>
-                {authMode === 'login' ? 'Hesabınız yok mu? Üye Olun' : 'Zaten hesabınız var mı? Giriş Yapın'}
-              </span>
-            </p>
           </div>
         </div>
       )}
