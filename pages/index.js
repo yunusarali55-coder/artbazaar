@@ -34,7 +34,8 @@ export default function Home() {
   ]);
 
   const platformWalletAddress = "0xAd58d1050942F795E651153231Ce8A152180C055";
-  const exactHeroImage = "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&auto=format&fit=crop&q=80";
+  // Gazze ve Türkistan'daki mazlumların direnişini/zulmü anlatan anlamlı ve duyarlı bir görsel
+  const exactHeroImage = "https://images.unsplash.com/photo-1578328819058-b69f3a3b0f6b?w=800&auto=format&fit=crop&q=80";
 
   useEffect(() => {
     const savedUser = localStorage.getItem('efnan_user');
@@ -98,7 +99,6 @@ export default function Home() {
     alert('Çıkış yapıldı.');
   };
 
-  // Eser Ekleme Fonksiyonu (Supabase Storage Entegreli)
   const triggerListingProcess = async (e) => {
     e.preventDefault();
     if (!currentUser) {
@@ -115,27 +115,43 @@ export default function Home() {
     setUploading(true);
 
     try {
-      const fileExt = imageFile.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const compressedImageUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(imageFile);
+        reader.onload = (event) => {
+          const img = new Image();
+          img.src = event.target.result;
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 900;
+            const MAX_HEIGHT = 900;
+            let width = img.width;
+            let height = img.height;
 
-      // Görseli Supabase Storage (artworks-images) alanına yüklüyoruz
-      const { error: uploadError } = await supabase.storage
-        .from('artworks-images')
-        .upload(filePath, imageFile);
+            if (width > height) {
+              if (width > MAX_WIDTH) {
+                height *= MAX_WIDTH / width;
+                width = MAX_WIDTH;
+              }
+            } else {
+              if (height > MAX_HEIGHT) {
+                width *= MAX_HEIGHT / height;
+                height = MAX_HEIGHT;
+              }
+            }
 
-      if (uploadError) {
-        throw new Error('Görsel Storage yükleme hatası: ' + uploadError.message);
-      }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            resolve(canvas.toDataURL('image/jpeg', 0.75));
+          };
+          img.onerror = (error) => reject(error);
+        };
+        reader.onerror = (error) => reject(error);
+      });
 
-      // Yüklenen dosyanın genel erişim URL'sini alıyoruz
-      const { data: publicURLData } = supabase.storage
-        .from('artworks-images')
-        .getPublicUrl(filePath);
-
-      const publicImageUrl = publicURLData.publicUrl;
-
-      // Veritabanına resim linki ve diğer bilgileri kaydediyoruz
       const { error: insertError } = await supabase
         .from('artworks')
         .insert([
@@ -143,7 +159,7 @@ export default function Home() {
             title, 
             description: description || 'Açıklama yok', 
             price: 0.015, 
-            image_url: publicImageUrl, 
+            image_url: compressedImageUrl, 
             artist: currentUser.username,
             phone: phone || 'Belirtilmedi'
           }
@@ -215,8 +231,20 @@ export default function Home() {
       </Head>
 
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', position: 'sticky', top: 0, zIndex: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px', borderRadius: '8px', backgroundColor: '#222' }}>
-          <span style={{ color: '#ff4d4d', fontWeight: '900' }}>Efnan ArtBazaar</span>
+        <div 
+          onClick={() => window.location.reload()} 
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', borderRadius: '8px', backgroundColor: '#222', cursor: 'pointer' }}
+          title="Sayfayı yenilemek için tıklayın"
+        >
+          <span style={{ 
+            fontWeight: '900', 
+            background: 'linear-gradient(45deg, #ff4d4d, #f6851b, #10b981, #4f46e5, #ec4899)', 
+            WebkitBackgroundClip: 'text', 
+            WebkitTextFillColor: 'transparent',
+            fontSize: '1.1rem'
+          }}>
+            Efnan ArtBazaar
+          </span>
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           {currentUser ? (
@@ -238,8 +266,11 @@ export default function Home() {
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px 12px' }}>
         {activeTab === 'explore' && (
           <>
-            <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-              <img src={exactHeroImage} alt="Hero" style={{ width: '100%', height: '240px', objectFit: 'cover', borderRadius: '12px' }} />
+            <div style={{ textAlign: 'center', marginBottom: '30px', position: 'relative' }}>
+              <img src={exactHeroImage} alt="Gazze ve Türkistan Direnişi" style={{ width: '100%', height: '260px', objectFit: 'cover', borderRadius: '12px', filter: 'contrast(1.05)' }} />
+              <div style={{ position: 'absolute', bottom: '12px', left: '12px', right: '12px', backgroundColor: 'rgba(0,0,0,0.6)', padding: '6px', borderRadius: '6px', color: 'white', fontSize: '0.8rem' }}>
+                🇵🇸 Gazze ve Doğu Türkistan'ın Haklı Davası ve Direnişine Destek Platformu
+              </div>
             </div>
 
             <section style={{ marginBottom: '40px' }}>
@@ -278,7 +309,7 @@ export default function Home() {
                 </div>
 
                 <button type="submit" disabled={uploading} style={{ backgroundColor: uploading ? '#9ca3af' : '#059669', color: 'white', border: 'none', padding: '12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
-                  {uploading ? 'Yükleniyor ve Vitrine Ekleniyor...' : 'Eseri Vitrine Ekle'}
+                  {uploading ? 'İşleniyor ve Vitrine Ekleniyor...' : 'Eseri Vitrine Ekle'}
                 </button>
               </form>
             </section>
