@@ -34,8 +34,6 @@ export default function Home() {
   ]);
 
   const platformWalletAddress = "0xAd58d1050942F795E651153231Ce8A152180C055";
-  // Gazze ve Türkistan'daki mazlumların direnişini/zulmü anlatan anlamlı ve duyarlı bir görsel
-  const exactHeroImage = "https://images.unsplash.com/photo-1578328819058-b69f3a3b0f6b?w=800&auto=format&fit=crop&q=80";
 
   useEffect(() => {
     const savedUser = localStorage.getItem('efnan_user');
@@ -63,7 +61,7 @@ export default function Home() {
           phone: art.phone || 'Belirtilmedi',
           price: art.price ? `${art.price} ETH` : '0.015 ETH',
           duration: 'Süresiz / Yayında',
-          image: art.image_url || exactHeroImage,
+          image: art.image_url || 'https://picsum.photos/seed/default/1200/800',
           status: 'Satışta'
         }));
         setListings(prev => [...formattedArtworks, ...prev]);
@@ -99,6 +97,7 @@ export default function Home() {
     alert('Çıkış yapıldı.');
   };
 
+  // Görseli küçülterek boyut sınırına takılmadan veritabanına kaydeden fonksiyon
   const triggerListingProcess = async (e) => {
     e.preventDefault();
     if (!currentUser) {
@@ -123,8 +122,8 @@ export default function Home() {
           img.src = event.target.result;
           img.onload = () => {
             const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 900;
-            const MAX_HEIGHT = 900;
+            const MAX_WIDTH = 600; // Boyutu küçülterek Failed to fetch hatasını engelliyoruz
+            const MAX_HEIGHT = 600;
             let width = img.width;
             let height = img.height;
 
@@ -145,7 +144,7 @@ export default function Home() {
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
             
-            resolve(canvas.toDataURL('image/jpeg', 0.75));
+            resolve(canvas.toDataURL('image/jpeg', 0.60)); // Sıkıştırma oranı
           };
           img.onerror = (error) => reject(error);
         };
@@ -234,7 +233,7 @@ export default function Home() {
         <div 
           onClick={() => window.location.reload()} 
           style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', borderRadius: '8px', backgroundColor: '#222', cursor: 'pointer' }}
-          title="Sayfayı yenilemek için tıklayın"
+          title="Sayfayı yenile"
         >
           <span style={{ 
             fontWeight: '900', 
@@ -266,11 +265,10 @@ export default function Home() {
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px 12px' }}>
         {activeTab === 'explore' && (
           <>
-            <div style={{ textAlign: 'center', marginBottom: '30px', position: 'relative' }}>
-              <img src={exactHeroImage} alt="Gazze ve Türkistan Direnişi" style={{ width: '100%', height: '260px', objectFit: 'cover', borderRadius: '12px', filter: 'contrast(1.05)' }} />
-              <div style={{ position: 'absolute', bottom: '12px', left: '12px', right: '12px', backgroundColor: 'rgba(0,0,0,0.6)', padding: '6px', borderRadius: '6px', color: 'white', fontSize: '0.8rem' }}>
-                🇵🇸 Gazze ve Doğu Türkistan'ın Haklı Davası ve Direnişine Destek Platformu
-              </div>
+            {/* Üst kısımdaki saçma resim kaldırıldı, yerine sade ve temiz bir alan eklendi */}
+            <div style={{ textAlign: 'center', marginBottom: '30px', backgroundColor: '#1f2937', color: 'white', padding: '30px 20px', borderRadius: '12px' }}>
+              <h1 style={{ fontSize: '1.5rem', marginBottom: '8px' }}>Sanat ve Eser Pazarı</h1>
+              <p style={{ fontSize: '0.85rem', color: '#9ca3af' }}>Değerli eserlerinizi güvenle sergileyin ve keşfedin.</p>
             </div>
 
             <section style={{ marginBottom: '40px' }}>
