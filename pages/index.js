@@ -19,7 +19,6 @@ export default function Home() {
   const [balance, setBalance] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [duration, setDuration] = useState('1'); 
   const [phone, setPhone] = useState('');
   const [imageFile, setImageFile] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -30,7 +29,7 @@ export default function Home() {
   const [showExchangeInfo, setShowExchangeInfo] = useState(false);
 
   const [orders, setOrders] = useState([]);
-  const [activeTab, setActiveTab] = useState('explore'); // 'explore', 'my_arts', 'my_orders'
+  const [activeTab, setActiveTab] = useState('explore');
 
   const [listings, setListings] = useState([
     { id: 1, title: 'Neon Rüya', description: 'Renklerin ve neon ışıkların büyüleyici dansı.', artist: 'Yunus Aralı', phone: '05551112233', price: '0.05 ETH', duration: '1 Ay', image: 'https://picsum.photos/seed/art1/1200/800', status: 'Satışta' },
@@ -42,13 +41,9 @@ export default function Home() {
 
   useEffect(() => {
     const savedUser = localStorage.getItem('efnan_user');
-    if (savedUser) {
-      setCurrentUser(JSON.parse(savedUser));
-    }
+    if (savedUser) setCurrentUser(JSON.parse(savedUser));
     const savedOrders = localStorage.getItem('efnan_orders');
-    if (savedOrders) {
-      setOrders(JSON.parse(savedOrders));
-    }
+    if (savedOrders) setOrders(JSON.parse(savedOrders));
     fetchArtworksFromSupabase();
   }, []);
 
@@ -107,24 +102,6 @@ export default function Home() {
     alert('Çıkış yapıldı.');
   };
 
-  const connectWallet = async () => {
-    if (typeof window.ethereum !== 'undefined') {
-      try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const accounts = await provider.send('eth_requestAccounts', []);
-        setAccount(accounts[0]);
-        const rawBalance = await provider.getBalance(accounts[0]);
-        setBalance(parseFloat(ethers.utils.formatEther(rawBalance)).toFixed(4));
-        return accounts[0];
-      } catch (error) {
-        return null;
-      }
-    } else {
-      alert('MetaMask cüzdanı bulunamadı!');
-      return null;
-    }
-  };
-
   const triggerListingProcess = async (e) => {
     e.preventDefault();
     if (!currentUser) {
@@ -141,7 +118,7 @@ export default function Home() {
 
     try {
       const fileExt = imageFile.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36.substring(2))}.${fileExt}`;
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
       
       const { error: uploadError } = await supabase.storage
         .from('art-images')
@@ -251,7 +228,6 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* Sekmeler */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', padding: '12px', backgroundColor: 'white', borderBottom: '1px solid #e5e7eb' }}>
         <button onClick={() => setActiveTab('explore')} style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', backgroundColor: activeTab === 'explore' ? '#4f46e5' : '#e5e7eb', color: activeTab === 'explore' ? 'white' : '#374151', fontWeight: 'bold', cursor: 'pointer' }}>Keşfet & Satın Al</button>
         <button onClick={() => setActiveTab('my_orders')} style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', backgroundColor: activeTab === 'my_orders' ? '#4f46e5' : '#e5e7eb', color: activeTab === 'my_orders' ? 'white' : '#374151', fontWeight: 'bold', cursor: 'pointer' }}>Siparişlerim ({orders.length})</button>
@@ -329,7 +305,6 @@ export default function Home() {
         )}
       </main>
 
-      {/* Ödeme Modalı */}
       {showPaymentModal && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1100, padding: '16px' }}>
           <div style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '400px', width: '100%', padding: '20px' }}>
@@ -362,7 +337,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Detay Modalı */}
       {selectedArt && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1100, padding: '16px' }}>
           <div style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '400px', width: '100%', padding: '20px', position: 'relative' }}>
