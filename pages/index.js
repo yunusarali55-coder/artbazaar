@@ -98,7 +98,7 @@ export default function Home() {
     alert('Çıkış yapıldı.');
   };
 
-  // Eser Ekleme Fonksiyonu (Görseli otomatik sıkıştırıp boyutu küçülterek hatayı engeller)
+  // Eser Ekleme Fonksiyonu (Supabase Storage Entegreli)
   const triggerListingProcess = async (e) => {
     e.preventDefault();
     if (!currentUser) {
@@ -115,43 +115,27 @@ export default function Home() {
     setUploading(true);
 
     try {
-      const compressedImageUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(imageFile);
-        reader.onload = (event) => {
-          const img = new Image();
-          img.src = event.target.result;
-          img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 800;
-            const MAX_HEIGHT = 800;
-            let width = img.width;
-            let height = img.height;
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+      const filePath = `${fileName}`;
 
-            if (width > height) {
-              if (width > MAX_WIDTH) {
-                height *= MAX_WIDTH / width;
-                width = MAX_WIDTH;
-              }
-            } else {
-              if (height > MAX_HEIGHT) {
-                width *= MAX_HEIGHT / height;
-                height = MAX_HEIGHT;
-              }
-            }
+      // Görseli Supabase Storage (artworks-images) alanına yüklüyoruz
+      const { error: uploadError } = await supabase.storage
+        .from('artworks-images')
+        .upload(filePath, imageFile);
 
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            
-            resolve(canvas.toDataURL('image/jpeg', 0.7));
-          };
-          img.onerror = (error) => reject(error);
-        };
-        reader.onerror = (error) => reject(error);
-      });
+      if (uploadError) {
+        throw new Error('Görsel Storage yükleme hatası: ' + uploadError.message);
+      }
 
+      // Yüklenen dosyanın genel erişim URL'sini alıyoruz
+      const { data: publicURLData } = supabase.storage
+        .from('artworks-images')
+        .getPublicUrl(filePath);
+
+      const publicImageUrl = publicURLData.publicUrl;
+
+      // Veritabanına resim linki ve diğer bilgileri kaydediyoruz
       const { error: insertError } = await supabase
         .from('artworks')
         .insert([
@@ -159,26 +143,26 @@ export default function Home() {
             title, 
             description: description || 'Açıklama yok', 
             price: 0.015, 
-            image_url: compressedImageUrl, 
+            image_url: publicImageUrl, 
             artist: currentUser.username,
             phone: phone || 'Belirtilmedi'
           }
         ]);
 
       if (insertError) {
-        console.error('Supabase Kayıt Hatası:', insertError);
-        alert('Eser eklenirken hata oluştu: ' + insertError.message);
-      } else {
-        alert('Eseriniz başarıyla yüklendi ve vitrine eklendi!');
-        setTitle('');
-        setDescription('');
-        setPhone('');
-        setImageFile(null);
-        fetchArtworksFromSupabase();
+        throw new Error('Veritabanına kayıt hatası: ' + insertError.message);
       }
+
+      alert('Eseriniz başarıyla yüklendi ve vitrine eklendi!');
+      setTitle('');
+      setDescription('');
+      setPhone('');
+      setImageFile(null);
+      fetchArtworksFromSupabase();
+
     } catch (err) {
       console.error('İşlem Hatası:', err);
-      alert('Dosya işlenirken veya yüklenirken hata oluştu: ' + err.message);
+      alert('Hata oluştu: ' + err.message);
     } finally {
       setUploading(false);
     }
