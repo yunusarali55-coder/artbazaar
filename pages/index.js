@@ -70,7 +70,6 @@ export default function Home() {
           duration: '1 Ay',
           image: art.image_url
         }));
-        // Eğer veritabanında gerçek eserler varsa örneklerin üzerine ekle/güncelle
         setListings(prev => [...formattedArtworks, ...prev]);
       }
     } catch (err) {
@@ -153,7 +152,7 @@ export default function Home() {
       const filePath = `${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('art-imges')
+        .from('art-images')
         .upload(filePath, imageFile);
 
       if (uploadError) {
@@ -163,7 +162,7 @@ export default function Home() {
       }
 
       const { data: publicUrlData } = supabase.storage
-        .from('art-imges')
+        .from('art-images')
         .getPublicUrl(filePath);
 
       const imageUrl = publicUrlData.publicUrl;
@@ -380,6 +379,40 @@ export default function Home() {
         </div>
       )}
 
+      {showAuthModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1100, padding: '16px' }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '400px', width: '100%', padding: '24px', position: 'relative', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+            <button onClick={() => setShowAuthModal(false)} style={{ position: 'absolute', top: '12px', right: '12px', background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '16px', color: '#111827' }}>{authMode === 'login' ? 'Giriş Yap' : 'Üye Ol'}</h2>
+            <form onSubmit={authMode === 'login' ? handleLogin : handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {authMode === 'register' && (
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '500', marginBottom: '4px', color: '#374151' }}>Kullanıcı Adı</label>
+                  <input type="text" placeholder="Adınız" value={username} onChange={(e) => setUsername(e.target.value)} required style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.9rem' }} />
+                </div>
+              )}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '500', marginBottom: '4px', color: '#374151' }}>E-posta</label>
+                <input type="email" placeholder="ornek@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.9rem' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '500', marginBottom: '4px', color: '#374151' }}>Şifre</label>
+                <input type="password" placeholder="******" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.9rem' }} />
+              </div>
+              <button type="submit" style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold', marginTop: '8px', cursor: 'pointer' }}>
+                {authMode === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}
+              </button>
+            </form>
+            <p style={{ textAlign: 'center', marginTop: '14px', fontSize: '0.85rem', color: '#6b7280' }}>
+              {authMode === 'login' ? 'Hesabınız yok mu? ' : 'Zaten hesabınız var mı? '}
+              <span onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')} style={{ color: '#4f46e5', cursor: 'pointer', fontWeight: 'bold' }}>
+                {authMode === 'login' ? 'Üye Ol' : 'Giriş Yap'}
+              </span>
+            </p>
+          </div>
+        </div>
+      )}
+
       {showPaymentModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1100, padding: '16px' }}>
           <div style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '420px', width: '100%', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
@@ -387,45 +420,13 @@ export default function Home() {
               <h2 style={{ fontSize: '1.15rem', color: '#111827', fontWeight: 'bold' }}>Ödeme Yöntemi Seçin</h2>
               <button onClick={() => setShowPaymentModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <button onClick={payWithMetaMask} style={{ backgroundColor: '#f59e0b', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '0.95rem' }}>🦊 MetaMask / Web3 Cüzdan ile Öde</button>
-              <div style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '12px', backgroundColor: '#f9fafb' }}>
-                <p style={{ fontWeight: 'bold', color: '#1f2937', marginBottom: '4px', fontSize: '0.9rem' }}>📊 Borsa ile Öde</p>
-                <div style={{ backgroundColor: 'white', padding: '6px', borderRadius: '4px', border: '1px dashed #d1d5db', fontSize: '0.7rem', wordBreak: 'break-all', color: '#374151', marginBottom: '8px' }}>{platformWalletAddress}</div>
-                <button onClick={confirmManualExchangePayment} style={{ width: '100%', backgroundColor: '#2563eb', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>Borsadan Transferi Yaptım, Bildir</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showAuthModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '16px' }}>
-          <div style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '380px', width: '100%', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ fontSize: '1.15rem', color: '#111827', fontWeight: 'bold' }}>{authMode === 'login' ? 'Giriş Yap' : 'Üye Ol'}</h2>
-              <button onClick={() => setShowAuthModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
-            </div>
-            <form onSubmit={authMode === 'login' ? handleLogin : handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {authMode === 'register' && (
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '500', marginBottom: '4px', color: '#374151' }}>Kullanıcı Adı</label>
-                  <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Adınız" required style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.9rem' }} />
-                </div>
-              )}
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '500', marginBottom: '4px', color: '#374151' }}>E-posta Adresi</label>
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="ornek@mail.com" required style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.9rem' }} />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '500', marginBottom: '4px', color: '#374151' }}>Şifre</label>
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="********" required style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.9rem' }} />
-              </div>
-              <button type="submit" style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '8px', fontSize: '0.95rem' }}>{authMode === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}</button>
-            </form>
-            <div style={{ textAlign: 'center', marginTop: '14px' }}>
-              <button onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')} style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', fontSize: '0.8rem' }}>
-                {authMode === 'login' ? 'Hesabınız yok mu? Üye olun' : 'Zaten hesabınız var mı? Giriş yapın'}
+            <p style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '20px' }}>Lütfen yapmak istediğiniz ödeme yöntemini seçin:</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <button onClick={payWithMetaMask} style={{ backgroundColor: '#f6851b', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.95rem' }}>
+                🦊 MetaMask ile Öde (Web3)
+              </button>
+              <button onClick={confirmManualExchangePayment} style={{ backgroundColor: '#4f46e5', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.95rem' }}>
+                🏦 Borsa Transfer Bildirimi Yap
               </button>
             </div>
           </div>
