@@ -97,7 +97,7 @@ export default function Home() {
     alert('Çıkış yapıldı.');
   };
 
-  // Görseli küçülterek boyut sınırına takılmadan veritabanına kaydeden fonksiyon
+  // Kamera ile çekilen veya galeriden seçilen görseli optimize edip yükleyen fonksiyon
   const triggerListingProcess = async (e) => {
     e.preventDefault();
     if (!currentUser) {
@@ -107,7 +107,7 @@ export default function Home() {
     }
 
     if (!imageFile) {
-      alert('Lütfen cihazınızdan/galerinizden bir eser görseli seçin.');
+      alert('Lütfen kameradan bir eser fotoğrafı çekin veya görsel seçin.');
       return;
     }
 
@@ -122,8 +122,8 @@ export default function Home() {
           img.src = event.target.result;
           img.onload = () => {
             const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 600; // Boyutu küçülterek Failed to fetch hatasını engelliyoruz
-            const MAX_HEIGHT = 600;
+            const MAX_WIDTH = 400; 
+            const MAX_HEIGHT = 400;
             let width = img.width;
             let height = img.height;
 
@@ -144,7 +144,7 @@ export default function Home() {
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
             
-            resolve(canvas.toDataURL('image/jpeg', 0.60)); // Sıkıştırma oranı
+            resolve(canvas.toDataURL('image/jpeg', 0.50));
           };
           img.onerror = (error) => reject(error);
         };
@@ -265,7 +265,6 @@ export default function Home() {
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px 12px' }}>
         {activeTab === 'explore' && (
           <>
-            {/* Üst kısımdaki saçma resim kaldırıldı, yerine sade ve temiz bir alan eklendi */}
             <div style={{ textAlign: 'center', marginBottom: '30px', backgroundColor: '#1f2937', color: 'white', padding: '30px 20px', borderRadius: '12px' }}>
               <h1 style={{ fontSize: '1.5rem', marginBottom: '8px' }}>Sanat ve Eser Pazarı</h1>
               <p style={{ fontSize: '0.85rem', color: '#9ca3af' }}>Değerli eserlerinizi güvenle sergileyin ve keşfedin.</p>
@@ -293,17 +292,28 @@ export default function Home() {
             </section>
 
             <section style={{ maxWidth: '600px', margin: '0 auto', backgroundColor: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-              <h2 style={{ fontSize: '1.2rem', marginBottom: '6px' }}>Kendi Eserini Ekle (Galeriden / Cihazdan)</h2>
-              <p style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: '14px' }}>Yüklediğiniz eser siz kaldırana veya satılana kadar vitrinde süresiz kalır.</p>
+              <h2 style={{ fontSize: '1.2rem', marginBottom: '6px' }}>Eserini Canlı Kamera ile Çek & Ekle</h2>
+              <p style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: '14px' }}>Doğrudan kamera ile çekim yaparak eserinizi anında vitrine ekleyebilirsiniz.</p>
               
               <form onSubmit={triggerListingProcess} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <input type="text" placeholder="Eser Adı" value={title} onChange={(e) => setTitle(e.target.value)} required style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
                 <textarea placeholder="Eser Açıklaması" value={description} onChange={(e) => setDescription(e.target.value)} rows="2" style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
                 <input type="text" placeholder="İletişim / Telefon Numarası (Örn: 0555...)" value={phone} onChange={(e) => setPhone(e.target.value)} required style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
                 
-                <div style={{ border: '1px dashed #d1d5db', padding: '10px', borderRadius: '6px', backgroundColor: '#f9fafb' }}>
-                  <label style={{ fontSize: '0.85rem', color: '#374151', display: 'block', marginBottom: '4px' }}>Görsel Seç (Galeri, Dosya, Flash Bellek vb.):</label>
-                  <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files[0])} required style={{ width: '100%' }} />
+                {/* Doğrudan Kamera Açma Özelliği Eklenen Bölüm */}
+                <div style={{ border: '2px dashed #4f46e5', padding: '14px', borderRadius: '8px', backgroundColor: '#eef2ff', textAlign: 'center' }}>
+                  <label style={{ fontSize: '0.9rem', color: '#4f46e5', fontWeight: 'bold', display: 'block', marginBottom: '6px', cursor: 'pointer' }}>
+                    📷 Kamerayı Aç ve Fotoğraf Çek
+                  </label>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    capture="environment" 
+                    onChange={(e) => setImageFile(e.target.files[0])} 
+                    required 
+                    style={{ width: '100%', fontSize: '0.85rem' }} 
+                  />
+                  {imageFile && <p style={{ fontSize: '0.75rem', color: '#059669', marginTop: '4px' }}>✅ Fotoğraf hazır: {imageFile.name || "Kamera görüntüsü"}</p>}
                 </div>
 
                 <button type="submit" disabled={uploading} style={{ backgroundColor: uploading ? '#9ca3af' : '#059669', color: 'white', border: 'none', padding: '12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
