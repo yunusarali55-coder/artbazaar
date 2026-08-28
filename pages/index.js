@@ -1,8 +1,12 @@
-JavaScript
-
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { ethers } from 'ethers';
+import { createClient } from '@supabase/supabase-js';
+
+// Supabase Bağlantı Bilgileri (Supabase panelinden aldığımız bilgiler)
+const SUPABASE_URL = 'https://fthfwhiqbwfxolebcqdx.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_trENam...'; // Kendi publishable key değerini buraya yapıştırabilirsin
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 export default function Home() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -25,20 +29,50 @@ export default function Home() {
   const [pendingActionType, setPendingActionType] = useState(null); 
   const [pendingArtData, setPendingArtData] = useState(null); 
 
-  const [listings, setListings] = useState([
-    { id: 1, title: 'Cyber Mona Lisa', description: 'Yapay zeka ve rönesans sanatının dijital sentezi.', artist: '0x123...ABCD', price: '0.04 ETH', duration: '3 Ay', image: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=500&auto=format&fit=crop&q=60' },
-    { id: 2, title: 'Abstract Neon', description: 'Geleceğin sokak kültüründen ilham alan neon kompozisyon.', artist: '0x987...WXYZ', price: '0.004 ETH', duration: '1 Ay', image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60' }
-  ]);
+  const [listings, setListings] = useState([]);
 
   const platformWalletAddress = "0xAd58d1050942F795E651153231Ce8A152180C055";
   const exactHeroImage = "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&auto=format&fit=crop&q=80";
 
+  // Sayfa yüklendiğinde kullanıcıyı ve Supabase'deki eserleri çek
   useEffect(() => {
     const savedUser = localStorage.getItem('efnan_user');
     if (savedUser) {
       setCurrentUser(JSON.parse(savedUser));
     }
+    fetchArtworksFromSupabase();
   }, []);
+
+  // Supabase'den Eserleri Çekme Fonksiyonu
+  const fetchArtworksFromSupabase = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('artworks')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Eserler çekilirken hata oluştu:', error.message);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        // Supabase sütun adlarını frontend yapısına uygun hale getiriyoruz
+        const formattedArtworks = data.map((art) => ({
+          id: art.id,
+          title: art.title,
+          description: art.description,
+          artist: art.artist || 'Anonim',
+          price: art.price ? `${art.price} ETH` : '0.015 ETH',
+          duration: '1 Ay',
+          image: art.image_url
+        }));
+        setListings(formattedArtworks);
+      }
+    } catch (err) {
+      console.error('Bağlantı hatası:', err);
+    }
+  };
 
   const handleRegister = (e) => {
     e.preventDefault();
@@ -95,7 +129,8 @@ export default function Home() {
     }
   };
 
-  const triggerListingProcess = (e) => {
+  // Eser Listeleme ve Supabase Storage & Database Kayıt İşlemi
+  const triggerListingProcess = async (e) => {
     e.preventDefault();
     if (!currentUser) {
       alert('Eser listelemek için önce üye girişi yapmalısınız!');
@@ -109,31 +144,60 @@ export default function Home() {
 
     setUploading(true);
 
-    const reader = new FileReader();
-    reader.readAsDataURL(imageFile);
-    reader.onload = () => {
-      const base64Image = reader.result;
-      const newListing = {
-        id: listings.length + 1,
-        title: title,
-        description: description || 'Sanatçı tarafından açıklama girilmedi.',
-        artist: currentUser.username,
-        price: '0.015 ETH', 
-        duration: `${duration} Ay`,
-        image: base64Image
-      };
+    try {
+      // 1. Görseli Supabase Storage ('art-imges') alanına yükle
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
 
-      setListings([newListing, ...listings]);
-      alert(`Tebrikler! Eseriniz hiçbir ücret ödemeden ${duration} aylığına başarıyla listelendi!`);
-      setTitle('');
-      setDescription('');
-      setImageFile(null);
+      const { error: uploadError } = await supabase.storage
+        .from('art-imges')
+        .upload(filePath, imageFile);
+
+      if (uploadError) {
+        console.error('Storage yükleme hatası:', uploadError.message);
+        alert('Görsel yüklenirken hata oluştu: ' + uploadError.message);
+        setUploading(false);
+        return;
+      }
+
+      // 2. Yüklenen görselin Public URL adresini al
+      const { data: publicUrlData } = supabase.storage
+        .from('art-imges')
+        .getPublicUrl(filePath);
+
+      const imageUrl = publicUrlData.publicUrl;
+
+      // 3. Bilgileri Supabase 'artworks' tablosuna kaydet
+      const { error: insertError } = await supabase
+        .from('artworks')
+        .insert([
+          { 
+            title: title, 
+            description: description || 'Sanatçı tarafından açıklama girilmedi.', 
+            price: 0.015, 
+            image_url: imageUrl, 
+            artist: currentUser.username 
+          }
+        ]);
+
+      if (insertError) {
+        console.error('Veritabanı kayıt hatası:', insertError.message);
+        alert('Eser veritabanına kaydedilemedi: ' + insertError.message);
+      } else {
+        alert(`Tebrikler! Eseriniz Efnan projesinde kalıcı olarak başarıyla listelendi!`);
+        setTitle('');
+        setDescription('');
+        setImageFile(null);
+        // Listeyi tazele
+        fetchArtworksFromSupabase();
+      }
+    } catch (err) {
+      console.error('İşlem hatası:', err);
+      alert('Beklenmeyen bir hata oluştu.');
+    } finally {
       setUploading(false);
-    };
-    reader.onerror = () => {
-      alert('Görsel yüklenirken bir hata oluştu.');
-      setUploading(false);
-    };
+    }
   };
 
   const triggerBuyProcess = (art) => {
@@ -285,30 +349,34 @@ export default function Home() {
         <section style={{ marginBottom: '40px' }}>
           <h2 style={{ fontSize: '1.5rem', marginBottom: '16px', color: '#1f2937', borderBottom: '2px solid #e5e7eb', paddingBottom: '8px' }}>Keşfet & Satın Al</h2>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
-            {listings.map((art) => (
-              <div 
-                key={art.id} 
-                onClick={() => setSelectedArt(art)}
-                style={{ backgroundColor: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', cursor: 'pointer', transition: 'transform 0.2s' }}
-              >
-                <img src={art.image} alt={art.title} style={{ width: '100%', height: '200px', objectFit: 'cover' }} />
-                <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-                  <h3 style={{ fontSize: '1.1rem', marginBottom: '4px', color: '#111827' }}>{art.title}</h3>
-                  <p style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: '10px' }}>Sanatçı: {art.artist}</p>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
-                    <span style={{ fontSize: '1rem', fontWeight: 'bold', color: '#059669' }}>{art.price}</span>
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); triggerBuyProcess(art); }}
-                      style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem' }}
-                    >
-                      Satın Al
-                    </button>
+          {listings.length === 0 ? (
+            <p style={{ textAlign: 'center', color: '#6b7280', padding: '20px' }}>Henüz listelenmiş bir eser bulunmuyor. İlk eseri sen yükle!</p>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
+              {listings.map((art) => (
+                <div 
+                  key={art.id} 
+                  onClick={() => setSelectedArt(art)}
+                  style={{ backgroundColor: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', cursor: 'pointer', transition: 'transform 0.2s' }}
+                >
+                  <img src={art.image} alt={art.title} style={{ width: '100%', height: '200px', objectFit: 'cover' }} />
+                  <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+                    <h3 style={{ fontSize: '1.1rem', marginBottom: '4px', color: '#111827' }}>{art.title}</h3>
+                    <p style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: '10px' }}>Sanatçı: {art.artist}</p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
+                      <span style={{ fontSize: '1rem', fontWeight: 'bold', color: '#059669' }}>{art.price}</span>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); triggerBuyProcess(art); }}
+                        style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem' }}
+                      >
+                        Satın Al
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* ESER LİSTELEME FORMU */}
@@ -371,7 +439,7 @@ export default function Home() {
               disabled={uploading}
               style={{ backgroundColor: uploading ? '#9ca3af' : '#059669', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontSize: '1rem', fontWeight: 'bold', cursor: uploading ? 'not-allowed' : 'pointer', marginTop: '6px' }}
             >
-              {uploading ? 'Yükleniyor...' : 'Hemen Ücretsiz Yayınla'}
+              {uploading ? 'Yükleniyor & Kaydediliyor...' : 'Hemen Ücretsiz Yayınla'}
             </button>
           </form>
         </section>
@@ -507,5 +575,3 @@ export default function Home() {
     </div>
   );
 }
-
-Efnan ArtBazaar projenize yeni özellikler eklemek isterseniz (örneğin akıllı sözleşme entegrasyonu, veritabanı bağlantısı vb.), sormaktan çekinmeyin!
