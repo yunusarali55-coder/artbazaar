@@ -29,8 +29,8 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState('explore');
 
   const [listings, setListings] = useState([
-    { id: 1, title: 'Neon Rüya', description: 'Renklerin ve neon ışıkların büyüleyici dansı.', artist: 'Yunus Aralı', phone: '05551112233', price: '0.05 ETH', duration: 'Süresiz / Yayında', image: 'https://picsum.photos/seed/art1/1200/800', status: 'Satışta' },
-    { id: 2, title: 'Kozmik Yansımalar', description: 'Uzayın ve derinlik algısının harmanlandığı eser.', artist: 'Efnan Sanat', phone: '05324445566', price: '0.08 ETH', duration: 'Süresiz / Yayında', image: 'https://picsum.photos/seed/art2/1200/800', status: 'Satışta' }
+    { id: 1, title: 'Neon Rüya', description: 'Renklerin ve neon ışıkların büyüleyici dansı.', artist: 'Yunus Aralı', phone: '05443433881', price: '0.05 ETH', duration: 'Süresiz / Yayında', image: 'https://picsum.photos/seed/art1/1200/800', status: 'Satışta' },
+    { id: 2, title: 'Kozmik Yansımalar', description: 'Uzayın ve derinlik algısının harmanlandığı eser.', artist: 'Efnan Sanat', phone: '05443433881', price: '0.08 ETH', duration: 'Süresiz / Yayında', image: 'https://picsum.photos/seed/art2/1200/800', status: 'Satışta' }
   ]);
 
   const platformWalletAddress = "0xAd58d1050942F795E651153231Ce8A152180C055";
