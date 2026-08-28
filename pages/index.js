@@ -4,8 +4,8 @@ import { ethers } from 'ethers';
 import { createClient } from '@supabase/supabase-js';
 
 // Supabase Bağlantı Bilgileri
-const SUPABASE_URL = 'https://fthfwhiqbwfxolebcqdx.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_trENam...'; 
+const SUPABASE_URL = 'https://ftfhfwiqbwfxolebcqdx.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0aGZ3aGlxYndmeG9sZWJjcWR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4OTMyOTcsImV4cCI6MjEwMzQ2OTI5N30.efUIMqDHizg7zd4YCkiouCzX0GjpBl7AHkAz0nLpBdI'; 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 export default function Home() {
