@@ -29,7 +29,13 @@ export default function Home() {
   const [pendingActionType, setPendingActionType] = useState(null); 
   const [pendingArtData, setPendingArtData] = useState(null); 
 
-  const [listings, setListings] = useState([]);
+  // Vitrin boş kalmasın diye örnek tabloları doğrudan başlangıç verisi olarak yüklüyoruz
+  const [listings, setListings] = useState([
+    { id: 1, title: 'Neon Rüya', description: 'Renklerin ve neon ışıkların büyüleyici dansı.', artist: 'Yunus Aralı', price: '0.05 ETH', duration: '1 Ay', image: 'https://picsum.photos/seed/art1/1200/800' },
+    { id: 2, title: 'Kozmik Yansımalar', description: 'Uzayın ve derinlik algısının harmanlandığı eser.', artist: 'Efnan Sanat', price: '0.08 ETH', duration: '1 Ay', image: 'https://picsum.photos/seed/art2/1200/800' },
+    { id: 3, title: 'Altın Oran ve Geometri', description: 'Sadelik ve ihtişamı bir arada sunan minimalist çalışma.', artist: 'ArtBazaar', price: '0.03 ETH', duration: '1 Ay', image: 'https://picsum.photos/seed/art3/1200/800' },
+    { id: 4, title: 'Sonsuzluk Çemberi', description: 'Dinamik fırça darbeleri ve dijital dokular.', artist: 'Digital Art', price: '0.12 ETH', duration: '1 Ay', image: 'https://picsum.photos/seed/art4/1200/800' }
+  ]);
 
   const platformWalletAddress = "0xAd58d1050942F795E651153231Ce8A152180C055";
   const exactHeroImage = "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&auto=format&fit=crop&q=80";
@@ -64,15 +70,8 @@ export default function Home() {
           duration: '1 Ay',
           image: art.image_url
         }));
-        setListings(formattedArtworks);
-      } else {
-        // Veritabanı boşsa vitrini dolduracak şık örnek tablolar
-        setListings([
-          { id: 1, title: 'Neon Rüya', description: 'Renklerin ve neon ışıkların büyüleyici dansı.', artist: 'Yunus Aralı', price: '0.05 ETH', duration: '1 Ay', image: 'https://picsum.photos/seed/art1/1200/800' },
-          { id: 2, title: 'Kozmik Yansımalar', description: 'Uzayın ve derinlik algısının harmanlandığı eser.', artist: 'Efnan Sanat', price: '0.08 ETH', duration: '1 Ay', image: 'https://picsum.photos/seed/art2/1200/800' },
-          { id: 3, title: 'Altın Oran ve Geometri', description: 'Sadelik ve ihtişamı bir arada sunan minimalist çalışma.', artist: 'ArtBazaar', price: '0.03 ETH', duration: '1 Ay', image: 'https://picsum.photos/seed/art3/1200/800' },
-          { id: 4, title: 'Sonsuzluk Çemberi', description: 'Dinamik fırça darbeleri ve dijital dokular.', artist: 'Digital Art', price: '0.12 ETH', duration: '1 Ay', image: 'https://picsum.photos/seed/art4/1200/800' }
-        ]);
+        // Eğer veritabanında gerçek eserler varsa örneklerin üzerine ekle/güncelle
+        setListings(prev => [...formattedArtworks, ...prev]);
       }
     } catch (err) {
       console.error('Bağlantı hatası:', err);
