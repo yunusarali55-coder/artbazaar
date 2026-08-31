@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL =
-  'https://ftfhfwiqbwfxolebcqdx.supabase.co';
+const SUPABASE_URL = 'https://ftfhfwiqbwfxolebcqdx.supabase.co';
 
 const SUPABASE_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0Z2Z3aGlxYndmeG9sZWJjcWR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4OTMyOTcsImV4cCI6MjEwMzQ2OTI5N30.efUIMqDHizg7zd4YCkiouCzX0GjpBl7AHkAz0nLpBdI';
