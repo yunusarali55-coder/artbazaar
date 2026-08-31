@@ -2,10 +2,16 @@ import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = 'https://ftfhfwiqbwfxolebcqdx.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0Z2Z3aGlxYndmeG9sZWJjcWR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4OTMyOTcsImV4cCI6MjEwMzQ2OTI5N30.efUIMqDHizg7zd4YCkiouCzX0GjpBl7AHkAz0nLpBdI';
+const SUPABASE_URL =
+  'https://ftfhfwiqbwfxolebcqdx.supabase.co';
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0Z2Z3aGlxYndmeG9sZWJjcWR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4OTMyOTcsImV4cCI6MjEwMzQ2OTI5N30.efUIMqDHizg7zd4YCkiouCzX0GjpBl7AHkAz0nLpBdI';
+
+const supabase = createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 
 export default function Home() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -37,23 +43,27 @@ export default function Home() {
     {
       id: 'demo-1',
       title: 'Neon Rüya',
-      description: 'Renklerin ve neon ışıkların büyüleyici dansı.',
+      description:
+        'Renklerin ve neon ışıkların büyüleyici dansı.',
       artist: 'Yunus Aralı',
       phone: '05443433881',
       price: '0.05 ETH',
       duration: 'Süresiz / Yayında',
-      image: 'https://picsum.photos/seed/art1/1200/800',
+      image:
+        'https://picsum.photos/seed/art1/1200/800',
       status: 'Satışta'
     },
     {
       id: 'demo-2',
       title: 'Kozmik Yansımalar',
-      description: 'Uzayın ve derinlik algısının harmanlandığı eser.',
+      description:
+        'Uzayın ve derinlik algısının harmanlandığı eser.',
       artist: 'Efnan Sanat',
       phone: '05443433881',
       price: '0.08 ETH',
       duration: 'Süresiz / Yayında',
-      image: 'https://picsum.photos/seed/art2/1200/800',
+      image:
+        'https://picsum.photos/seed/art2/1200/800',
       status: 'Satışta'
     }
   ]);
@@ -61,103 +71,169 @@ export default function Home() {
   const platformWalletAddress =
     '0xAd58d1050942F795E651153231Ce8A152180C055';
 
+  // =========================================================
+  // SAYFA AÇILIŞI
+  // =========================================================
+
   useEffect(() => {
-    const savedUser = localStorage.getItem('efnan_user');
+    if (typeof window === 'undefined') return;
+
+    const savedUser =
+      localStorage.getItem('efnan_user');
 
     if (savedUser) {
       try {
-        setCurrentUser(JSON.parse(savedUser));
+        const parsedUser = JSON.parse(savedUser);
+        setCurrentUser(parsedUser);
       } catch (error) {
-        console.error('Kullanıcı bilgisi okunamadı:', error);
+        console.error(
+          'Kullanıcı bilgisi okunamadı:',
+          error
+        );
+        localStorage.removeItem('efnan_user');
       }
     }
 
-    const savedOrders = localStorage.getItem('efnan_orders');
+    const savedOrders =
+      localStorage.getItem('efnan_orders');
 
     if (savedOrders) {
       try {
-        setOrders(JSON.parse(savedOrders));
+        const parsedOrders = JSON.parse(savedOrders);
+
+        if (Array.isArray(parsedOrders)) {
+          setOrders(parsedOrders);
+        }
       } catch (error) {
-        console.error('Sipariş bilgileri okunamadı:', error);
+        console.error(
+          'Sipariş bilgileri okunamadı:',
+          error
+        );
+        localStorage.removeItem('efnan_orders');
       }
     }
 
     fetchArtworksFromSupabase();
   }, []);
 
-  // ---------------------------------------------------------
+  // =========================================================
   // SUPABASE'DEN ESERLERİ GETİR
-  // ---------------------------------------------------------
+  // =========================================================
 
   const fetchArtworksFromSupabase = async () => {
     try {
       const { data, error } = await supabase
         .from('artworks')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', {
+          ascending: false
+        });
 
       if (error) {
-        console.error('Eserler alınamadı:', error);
+        console.error(
+          'Supabase eser getirme hatası:',
+          error
+        );
+
         return;
       }
 
-      if (data && data.length > 0) {
-        const formattedArtworks = data.map((art) => ({
-          id: art.id,
-          title: art.title,
-          description: art.description,
-          artist: art.artist || 'Anonim',
-          phone: art.phone || 'Belirtilmedi',
-          price: art.price ? `${art.price} ETH` : '0.015 ETH',
+      const formattedArtworks = Array.isArray(data)
+        ? data.map((art) => ({
+            id: art.id,
+            title: art.title || 'İsimsiz Eser',
+            description:
+              art.description || 'Açıklama yok',
+            artist:
+              art.artist || 'Anonim',
+            phone:
+              art.phone || 'Belirtilmedi',
+            price:
+              art.price !== null &&
+              art.price !== undefined
+                ? `${art.price} ETH`
+                : '0.015 ETH',
+            duration:
+              'Süresiz / Yayında',
+            image:
+              art.image_url ||
+              'https://picsum.photos/seed/default/1200/800',
+            status: 'Satışta'
+          }))
+        : [];
+
+      setListings([
+        ...formattedArtworks,
+        {
+          id: 'demo-1',
+          title: 'Neon Rüya',
+          description:
+            'Renklerin ve neon ışıkların büyüleyici dansı.',
+          artist: 'Yunus Aralı',
+          phone: '05443433881',
+          price: '0.05 ETH',
           duration: 'Süresiz / Yayında',
           image:
-            art.image_url ||
-            'https://picsum.photos/seed/default/1200/800',
+            'https://picsum.photos/seed/art1/1200/800',
           status: 'Satışta'
-        }));
-
-        setListings((prev) => {
-          const demoListings = prev.filter(
-            (item) =>
-              item.id === 'demo-1' ||
-              item.id === 'demo-2'
-          );
-
-          return [...formattedArtworks, ...demoListings];
-        });
-      }
-    } catch (err) {
-      console.error(err);
+        },
+        {
+          id: 'demo-2',
+          title: 'Kozmik Yansımalar',
+          description:
+            'Uzayın ve derinlik algısının harmanlandığı eser.',
+          artist: 'Efnan Sanat',
+          phone: '05443433881',
+          price: '0.08 ETH',
+          duration: 'Süresiz / Yayında',
+          image:
+            'https://picsum.photos/seed/art2/1200/800',
+          status: 'Satışta'
+        }
+      ]);
+    } catch (error) {
+      console.error(
+        'Eserler alınırken beklenmeyen hata:',
+        error
+      );
     }
   };
 
-  // ---------------------------------------------------------
+  // =========================================================
   // RESİM SEÇİMİ
-  // ---------------------------------------------------------
+  // =========================================================
 
   const handleImageSelect = (file) => {
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      alert('Lütfen sadece resim dosyası seçin.');
+    if (!file.type || !file.type.startsWith('image/')) {
+      alert(
+        '❌ Lütfen sadece resim dosyası seçin.'
+      );
       return;
     }
 
-    // 10 MB'dan büyük dosyaları kabul etme
     if (file.size > 10 * 1024 * 1024) {
-      alert('Resim en fazla 10 MB olabilir.');
+      alert(
+        '❌ Resim en fazla 10 MB olabilir.'
+      );
       return;
     }
+
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+    }
+
+    const previewUrl =
+      URL.createObjectURL(file);
 
     setImageFile(file);
-
-    const previewUrl = URL.createObjectURL(file);
     setImagePreview(previewUrl);
   };
 
-  // ---------------------------------------------------------
+  // =========================================================
   // RESİMİ KÜÇÜLT
-  // ---------------------------------------------------------
+  // =========================================================
 
   const compressImage = (file) => {
     return new Promise((resolve, reject) => {
@@ -173,7 +249,10 @@ export default function Home() {
           let width = img.width;
           let height = img.height;
 
-          if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+          if (
+            width > MAX_WIDTH ||
+            height > MAX_HEIGHT
+          ) {
             const ratio = Math.min(
               MAX_WIDTH / width,
               MAX_HEIGHT / height
@@ -183,24 +262,40 @@ export default function Home() {
             height = Math.round(height * ratio);
           }
 
-          const canvas = document.createElement('canvas');
+          const canvas =
+            document.createElement('canvas');
 
           canvas.width = width;
           canvas.height = height;
 
-          const ctx = canvas.getContext('2d');
+          const ctx =
+            canvas.getContext('2d');
 
           if (!ctx) {
-            reject(new Error('Resim işleme alanı oluşturulamadı.'));
+            reject(
+              new Error(
+                'Resim işleme alanı oluşturulamadı.'
+              )
+            );
             return;
           }
 
-          ctx.drawImage(img, 0, 0, width, height);
+          ctx.drawImage(
+            img,
+            0,
+            0,
+            width,
+            height
+          );
 
           canvas.toBlob(
             (blob) => {
               if (!blob) {
-                reject(new Error('Resim sıkıştırılamadı.'));
+                reject(
+                  new Error(
+                    'Resim sıkıştırılamadı.'
+                  )
+                );
                 return;
               }
 
@@ -212,46 +307,102 @@ export default function Home() {
         };
 
         img.onerror = () => {
-          reject(new Error('Resim okunamadı.'));
+          reject(
+            new Error(
+              'Resim okunamadı.'
+            )
+          );
         };
 
         img.src = event.target.result;
       };
 
       reader.onerror = () => {
-        reject(new Error('Dosya okunamadı.'));
+        reject(
+          new Error(
+            'Dosya okunamadı.'
+          )
+        );
       };
 
       reader.readAsDataURL(file);
     });
   };
 
-  // ---------------------------------------------------------
+  // =========================================================
+  // FORM TEMİZLEME
+  // =========================================================
+
+  const resetImageSelection = () => {
+    setImageFile(null);
+
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+    }
+
+    setImagePreview(null);
+
+    const cameraInput =
+      document.getElementById(
+        'camera-image-input'
+      );
+
+    const galleryInput =
+      document.getElementById(
+        'gallery-image-input'
+      );
+
+    if (cameraInput) {
+      cameraInput.value = '';
+    }
+
+    if (galleryInput) {
+      galleryInput.value = '';
+    }
+  };
+
+  const resetListingForm = () => {
+    setTitle('');
+    setDescription('');
+    setPhone('');
+    resetImageSelection();
+  };
+
+  // =========================================================
   // ESER YÜKLEME
-  // ---------------------------------------------------------
+  // =========================================================
 
   const triggerListingProcess = async (e) => {
     e.preventDefault();
 
+    if (uploading) return;
+
     if (!currentUser) {
-      alert('Eser listelemek için önce giriş yapmalısınız!');
+      alert(
+        '❌ Eser listelemek için önce giriş yapmalısınız!'
+      );
+
       setShowAuthModal(true);
       return;
     }
 
     if (!title.trim()) {
-      alert('Lütfen eser adını girin.');
+      alert(
+        '❌ Lütfen eser adını girin.'
+      );
       return;
     }
 
     if (!phone.trim()) {
-      alert('Lütfen iletişim telefon numaranızı girin.');
+      alert(
+        '❌ Lütfen iletişim telefon numaranızı girin.'
+      );
       return;
     }
 
     if (!imageFile) {
       alert(
-        'Lütfen kamera ile fotoğraf çekin veya galeriden/dosyadan bir resim seçin.'
+        '❌ Lütfen kamera ile fotoğraf çekin veya galeriden/dosyadan bir resim seçin.'
       );
       return;
     }
@@ -261,19 +412,38 @@ export default function Home() {
     let uploadedFilePath = null;
 
     try {
-      // 1. Resmi küçült
-      const compressedBlob = await compressImage(imageFile);
+      // -----------------------------------------------------
+      // 1. RESMİ SIKIŞTIR
+      // -----------------------------------------------------
 
-      // 2. Benzersiz dosya adı oluştur
+      const compressedBlob =
+        await compressImage(imageFile);
+
+      // -----------------------------------------------------
+      // 2. BENZERSİZ DOSYA ADI OLUŞTUR
+      // -----------------------------------------------------
+
       const uniqueName =
         `${Date.now()}-${Math.random()
           .toString(36)
           .substring(2, 10)}.jpg`;
 
-      uploadedFilePath = `uploads/${uniqueName}`;
+      uploadedFilePath =
+        `uploads/${uniqueName}`;
 
-      // 3. Supabase Storage'a yükle
-      const { error: uploadError } = await supabase.storage
+      console.log(
+        'Storage dosya yolu:',
+        uploadedFilePath
+      );
+
+      // -----------------------------------------------------
+      // 3. SUPABASE STORAGE'A YÜKLE
+      // -----------------------------------------------------
+
+      const {
+        data: uploadData,
+        error: uploadError
+      } = await supabase.storage
         .from('artworks')
         .upload(
           uploadedFilePath,
@@ -285,129 +455,171 @@ export default function Home() {
           }
         );
 
+      console.log(
+        'Storage upload sonucu:',
+        uploadData
+      );
+
       if (uploadError) {
+        console.error(
+          'Storage upload hatası:',
+          uploadError
+        );
+
         throw new Error(
-          'Resim yüklenemedi: ' +
-          uploadError.message
+          `Resim yüklenemedi: ${uploadError.message}`
         );
       }
 
-      // 4. Public URL oluştur
-      const { data: publicUrlData } =
-        supabase.storage
-          .from('artworks')
-          .getPublicUrl(uploadedFilePath);
+      // -----------------------------------------------------
+      // 4. PUBLIC URL AL
+      // -----------------------------------------------------
 
-      if (
-        !publicUrlData ||
-        !publicUrlData.publicUrl
-      ) {
+      const {
+        data: publicUrlData
+      } = supabase.storage
+        .from('artworks')
+        .getPublicUrl(
+          uploadedFilePath
+        );
+
+      const imageUrl =
+        publicUrlData?.publicUrl;
+
+      console.log(
+        'Oluşturulan resim URL:',
+        imageUrl
+      );
+
+      if (!imageUrl) {
         throw new Error(
           'Resim URL adresi oluşturulamadı.'
         );
       }
 
-      const imageUrl = publicUrlData.publicUrl;
+      // -----------------------------------------------------
+      // 5. ARTWORKS TABLOSUNA KAYDET
+      // -----------------------------------------------------
 
-      // 5. Eseri veritabanına kaydet
-      const { error: insertError } =
-        await supabase
-          .from('artworks')
-          .insert([
-            {
-              title: title.trim(),
-              description:
-                description.trim() ||
-                'Açıklama yok',
-              price: 0.015,
-              image_url: imageUrl,
-              artist: currentUser.username,
-              phone: phone.trim()
-            }
-          ]);
+      const artworkData = {
+        title: title.trim(),
+        description:
+          description.trim() ||
+          'Açıklama yok',
+        price: 0.015,
+        image_url: imageUrl,
+        artist:
+          currentUser.username ||
+          'Anonim',
+        phone: phone.trim()
+      };
+
+      console.log(
+        'Veritabanına gönderilecek eser:',
+        artworkData
+      );
+
+      const {
+        data: insertedArtwork,
+        error: insertError
+      } = await supabase
+        .from('artworks')
+        .insert([artworkData])
+        .select();
+
+      console.log(
+        'Veritabanı sonucu:',
+        insertedArtwork
+      );
 
       if (insertError) {
-        // DB kaydı başarısızsa resmi Storage'dan sil
-        await supabase.storage
-          .from('artworks')
-          .remove([uploadedFilePath]);
+        console.error(
+          'Veritabanı kayıt hatası:',
+          insertError
+        );
+
+        // Veritabanı başarısızsa Storage'daki resmi sil
+        if (uploadedFilePath) {
+          const {
+            error: removeError
+          } = await supabase.storage
+            .from('artworks')
+            .remove([
+              uploadedFilePath
+            ]);
+
+          if (removeError) {
+            console.error(
+              'Yüklenen resim silinemedi:',
+              removeError
+            );
+          }
+        }
 
         throw new Error(
-          'Veritabanına kayıt hatası: ' +
-          insertError.message
+          `Veritabanına kayıt hatası: ${insertError.message}`
         );
       }
 
-      // 6. Formu temizle
-      setTitle('');
-      setDescription('');
-      setPhone('');
-      setImageFile(null);
+      // -----------------------------------------------------
+      // 6. FORMU TEMİZLE
+      // -----------------------------------------------------
 
-      if (imagePreview) {
-        URL.revokeObjectURL(imagePreview);
-      }
+      resetListingForm();
 
-      setImagePreview(null);
+      // -----------------------------------------------------
+      // 7. LİSTEYİ YENİLE
+      // -----------------------------------------------------
 
-      const cameraInput =
-        document.getElementById(
-          'camera-image-input'
-        );
-
-      const galleryInput =
-        document.getElementById(
-          'gallery-image-input'
-        );
-
-      if (cameraInput) {
-        cameraInput.value = '';
-      }
-
-      if (galleryInput) {
-        galleryInput.value = '';
-      }
-
-      // 7. Listeyi yenile
       await fetchArtworksFromSupabase();
 
       alert(
         '✅ Eseriniz başarıyla yüklendi ve vitrine eklendi!'
       );
-
-    } catch (err) {
+    } catch (error) {
       console.error(
-        'Eser yükleme hatası:',
-        err
+        'Eser yükleme işlemi tamamen başarısız:',
+        error
       );
 
       alert(
-        '❌ Resim yüklenirken hata oluştu:\n\n' +
-        err.message
+        '❌ Eser yüklenirken hata oluştu:\n\n' +
+          (error?.message ||
+            'Bilinmeyen hata')
       );
-
     } finally {
       setUploading(false);
     }
   };
 
-  // ---------------------------------------------------------
+  // =========================================================
   // KAYIT
-  // ---------------------------------------------------------
+  // =========================================================
 
   const handleRegister = (e) => {
     e.preventDefault();
 
-    if (!email || !password || !username) {
+    if (
+      !email.trim() ||
+      !password ||
+      !username.trim()
+    ) {
       alert(
-        'Lütfen tüm alanları doldurun.'
+        '❌ Lütfen tüm alanları doldurun.'
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      alert(
+        '❌ Şifre en az 6 karakter olmalıdır.'
       );
       return;
     }
 
     const newUser = {
-      username,
-      email
+      username: username.trim(),
+      email: email.trim().toLowerCase()
     };
 
     localStorage.setItem(
@@ -418,27 +630,40 @@ export default function Home() {
     setCurrentUser(newUser);
     setShowAuthModal(false);
 
-    alert('Kayıt başarılı!');
+    setEmail('');
+    setPassword('');
+    setUsername('');
+
+    alert('✅ Kayıt başarılı!');
   };
 
-  // ---------------------------------------------------------
+  // =========================================================
   // GİRİŞ
-  // ---------------------------------------------------------
+  // =========================================================
 
   const handleLogin = (e) => {
     e.preventDefault();
 
-    if (!email || !password) {
+    if (
+      !email.trim() ||
+      !password
+    ) {
       alert(
-        'Lütfen bilgileri girin.'
+        '❌ Lütfen e-posta ve şifrenizi girin.'
       );
       return;
     }
 
     const existingUser = {
       username:
-        email.split('@')[0],
-      email
+        email
+          .trim()
+          .toLowerCase()
+          .split('@')[0],
+      email:
+        email
+          .trim()
+          .toLowerCase()
     };
 
     localStorage.setItem(
@@ -449,12 +674,15 @@ export default function Home() {
     setCurrentUser(existingUser);
     setShowAuthModal(false);
 
-    alert('Giriş yapıldı!');
+    setEmail('');
+    setPassword('');
+
+    alert('✅ Giriş yapıldı!');
   };
 
-  // ---------------------------------------------------------
+  // =========================================================
   // ÇIKIŞ
-  // ---------------------------------------------------------
+  // =========================================================
 
   const handleLogout = () => {
     localStorage.removeItem(
@@ -466,14 +694,14 @@ export default function Home() {
     alert('Çıkış yapıldı.');
   };
 
-  // ---------------------------------------------------------
+  // =========================================================
   // SATIN AL
-  // ---------------------------------------------------------
+  // =========================================================
 
   const triggerBuyProcess = (art) => {
     if (!currentUser) {
       alert(
-        'Satın almak için giriş yapmalısınız!'
+        '❌ Satın almak için giriş yapmalısınız!'
       );
 
       setShowAuthModal(true);
@@ -484,12 +712,17 @@ export default function Home() {
     setShowPaymentModal(true);
   };
 
-  // ---------------------------------------------------------
+  // =========================================================
   // SİPARİŞ OLUŞTUR
-  // ---------------------------------------------------------
+  // =========================================================
 
-  const createNewOrder = (paymentMethod) => {
-    if (!pendingArtData || !currentUser) {
+  const createNewOrder = (
+    paymentMethod
+  ) => {
+    if (
+      !pendingArtData ||
+      !currentUser
+    ) {
       return;
     }
 
@@ -533,28 +766,28 @@ export default function Home() {
     setPendingArtData(null);
 
     alert(
-      'Siparişiniz başarıyla oluşturuldu! "Siparişlerim" sekmesinden takip edebilirsiniz.'
+      '✅ Siparişiniz başarıyla oluşturuldu! "Siparişlerim" sekmesinden takip edebilirsiniz.'
     );
 
     setActiveTab('my_orders');
   };
 
-  // ---------------------------------------------------------
+  // =========================================================
   // SİPARİŞ DURUMU
-  // ---------------------------------------------------------
+  // =========================================================
 
   const updateOrderStatus = (
     orderId,
     newStatus
   ) => {
     const updated = orders.map(
-      (o) =>
-        o.id === orderId
+      (order) =>
+        order.id === orderId
           ? {
-              ...o,
+              ...order,
               status: newStatus
             }
-          : o
+          : order
     );
 
     setOrders(updated);
@@ -570,7 +803,8 @@ export default function Home() {
       style={{
         minHeight: '100vh',
         backgroundColor: '#f3f4f6',
-        fontFamily: 'sans-serif'
+        fontFamily:
+          'Arial, Helvetica, sans-serif'
       }}
     >
       <Head>
@@ -582,9 +816,16 @@ export default function Home() {
           name="viewport"
           content="width=device-width, initial-scale=1.0"
         />
+
+        <meta
+          name="description"
+          content="Efnan ArtBazaar - Sanat eserlerini keşfet, sergile ve satın al."
+        />
       </Head>
 
-      {/* NAVBAR */}
+      {/* =====================================================
+          NAVBAR
+      ===================================================== */}
 
       <nav
         style={{
@@ -603,7 +844,7 @@ export default function Home() {
       >
         <div
           onClick={() =>
-            window.location.reload()
+            setActiveTab('explore')
           }
           style={{
             display: 'flex',
@@ -652,7 +893,9 @@ export default function Home() {
                 }}
               >
                 👤{' '}
-                {currentUser.username}
+                {
+                  currentUser.username
+                }
               </span>
 
               <button
@@ -664,9 +907,14 @@ export default function Home() {
                     '#ef4444',
                   color: 'white',
                   border: 'none',
-                  padding: '4px 8px',
-                  borderRadius: '4px',
-                  fontSize: '0.75rem'
+                  padding:
+                    '4px 8px',
+                  borderRadius:
+                    '4px',
+                  fontSize:
+                    '0.75rem',
+                  cursor:
+                    'pointer'
                 }}
               >
                 Çıkış
@@ -675,19 +923,23 @@ export default function Home() {
           ) : (
             <button
               onClick={() =>
-                setShowAuthModal(
-                  true
-                )
+                setShowAuthModal(true)
               }
               style={{
                 backgroundColor:
                   '#10b981',
                 color: 'white',
                 border: 'none',
-                padding: '6px 10px',
-                borderRadius: '6px',
-                fontSize: '0.8rem',
-                fontWeight: 'bold'
+                padding:
+                  '6px 10px',
+                borderRadius:
+                  '6px',
+                fontSize:
+                  '0.8rem',
+                fontWeight:
+                  'bold',
+                cursor:
+                  'pointer'
               }}
             >
               Giriş Yap
@@ -696,7 +948,9 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* SEKME MENÜSÜ */}
+      {/* =====================================================
+          SEKME MENÜSÜ
+      ===================================================== */}
 
       <div
         style={{
@@ -707,14 +961,13 @@ export default function Home() {
           padding: '12px',
           backgroundColor: 'white',
           borderBottom:
-            '1px solid #e5e7eb'
+            '1px solid #e5e7eb',
+          flexWrap: 'wrap'
         }}
       >
         <button
           onClick={() =>
-            setActiveTab(
-              'explore'
-            )
+            setActiveTab('explore')
           }
           style={{
             padding:
@@ -743,9 +996,7 @@ export default function Home() {
 
         <button
           onClick={() =>
-            setActiveTab(
-              'my_orders'
-            )
+            setActiveTab('my_orders')
           }
           style={{
             padding:
@@ -776,17 +1027,23 @@ export default function Home() {
 
       <main
         style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
+          maxWidth:
+            '1200px',
+          margin:
+            '0 auto',
           padding:
             '20px 12px'
         }}
       >
-        {/* KEŞFET */}
+        {/* ===================================================
+            KEŞFET
+        =================================================== */}
 
         {activeTab ===
           'explore' && (
           <>
+            {/* HERO */}
+
             <div
               style={{
                 textAlign:
@@ -830,7 +1087,9 @@ export default function Home() {
               </p>
             </div>
 
-            {/* VİTRİN */}
+            {/* =================================================
+                VİTRİN
+            ================================================= */}
 
             <section
               style={{
@@ -853,181 +1112,214 @@ export default function Home() {
                 Yayında)
               </h2>
 
-              <div
-                style={{
-                  display:
-                    'grid',
-                  gridTemplateColumns:
-                    'repeat(auto-fill, minmax(260px, 1fr))',
-                  gap: '16px'
-                }}
-              >
-                {listings.map(
-                  (art) => (
-                    <div
-                      key={
-                        art.id
-                      }
-                      onClick={() =>
-                        setSelectedArt(
-                          art
-                        )
-                      }
-                      style={{
-                        backgroundColor:
-                          'white',
-                        borderRadius:
-                          '12px',
-                        overflow:
-                          'hidden',
-                        boxShadow:
-                          '0 4px 6px rgba(0,0,0,0.1)',
-                        cursor:
-                          'pointer'
-                      }}
-                    >
-                      <img
-                        src={
-                          art.image
-                        }
-                        alt={
-                          art.title
-                        }
-                        style={{
-                          width:
-                            '100%',
-                          height:
-                            '180px',
-                          objectFit:
-                            'cover'
-                        }}
-                      />
-
+              {listings.length ===
+              0 ? (
+                <p
+                  style={{
+                    color:
+                      '#6b7280'
+                  }}
+                >
+                  Henüz eser
+                  bulunmuyor.
+                </p>
+              ) : (
+                <div
+                  style={{
+                    display:
+                      'grid',
+                    gridTemplateColumns:
+                      'repeat(auto-fill, minmax(260px, 1fr))',
+                    gap: '16px'
+                  }}
+                >
+                  {listings.map(
+                    (art) => (
                       <div
+                        key={
+                          art.id
+                        }
+                        onClick={() =>
+                          setSelectedArt(
+                            art
+                          )
+                        }
                         style={{
-                          padding:
-                            '12px'
+                          backgroundColor:
+                            'white',
+                          borderRadius:
+                            '12px',
+                          overflow:
+                            'hidden',
+                          boxShadow:
+                            '0 4px 6px rgba(0,0,0,0.1)',
+                          cursor:
+                            'pointer'
                         }}
                       >
-                        <h3
-                          style={{
-                            fontSize:
-                              '1rem',
-                            fontWeight:
-                              'bold'
-                          }}
-                        >
-                          {
+                        <img
+                          src={
+                            art.image
+                          }
+                          alt={
                             art.title
                           }
-                        </h3>
-
-                        <p
-                          style={{
-                            fontSize:
-                              '0.8rem',
-                            color:
-                              '#6b7280'
+                          loading="lazy"
+                          onError={(
+                            e
+                          ) => {
+                            e.currentTarget.src =
+                              'https://picsum.photos/seed/default/1200/800';
                           }}
-                        >
-                          Sanatçı:{' '}
-                          {
-                            art.artist
-                          }
-                        </p>
-
-                        <p
                           style={{
-                            fontSize:
-                              '0.8rem',
-                            color:
-                              '#059669'
+                            width:
+                              '100%',
+                            height:
+                              '180px',
+                            objectFit:
+                              'cover',
+                            display:
+                              'block'
                           }}
-                        >
-                          📞 İletişim:{' '}
-                          {
-                            art.phone
-                          }
-                        </p>
-
-                        <p
-                          style={{
-                            fontSize:
-                              '0.75rem',
-                            color:
-                              '#d97706',
-                            marginTop:
-                              '2px'
-                          }}
-                        >
-                          ⏳ Durum:{' '}
-                          {
-                            art.duration
-                          }
-                        </p>
+                        />
 
                         <div
                           style={{
-                            display:
-                              'flex',
-                            justifyContent:
-                              'space-between',
-                            alignItems:
-                              'center',
-                            marginTop:
-                              '10px'
+                            padding:
+                              '12px'
                           }}
                         >
-                          <span
+                          <h3
                             style={{
+                              fontSize:
+                                '1rem',
                               fontWeight:
                                 'bold',
-                              color:
-                                '#059669'
+                              margin:
+                                '0 0 6px 0'
                             }}
                           >
                             {
-                              art.price
+                              art.title
                             }
-                          </span>
+                          </h3>
 
-                          <button
-                            onClick={(
-                              e
-                            ) => {
-                              e.stopPropagation();
-                              triggerBuyProcess(
-                                art
-                              );
-                            }}
+                          <p
                             style={{
-                              backgroundColor:
-                                '#10b981',
-                              color:
-                                'white',
-                              border:
-                                'none',
-                              padding:
-                                '6px 10px',
-                              borderRadius:
-                                '6px',
                               fontSize:
                                 '0.8rem',
-                              fontWeight:
-                                'bold'
+                              color:
+                                '#6b7280',
+                              margin:
+                                '4px 0'
                             }}
                           >
-                            Satın Al
-                          </button>
+                            Sanatçı:{' '}
+                            {
+                              art.artist
+                            }
+                          </p>
+
+                          <p
+                            style={{
+                              fontSize:
+                                '0.8rem',
+                              color:
+                                '#059669',
+                              margin:
+                                '4px 0'
+                            }}
+                          >
+                            📞 İletişim:{' '}
+                            {
+                              art.phone
+                            }
+                          </p>
+
+                          <p
+                            style={{
+                              fontSize:
+                                '0.75rem',
+                              color:
+                                '#d97706',
+                              marginTop:
+                                '4px'
+                            }}
+                          >
+                            ⏳ Durum:{' '}
+                            {
+                              art.duration
+                            }
+                          </p>
+
+                          <div
+                            style={{
+                              display:
+                                'flex',
+                              justifyContent:
+                                'space-between',
+                              alignItems:
+                                'center',
+                              marginTop:
+                                '10px'
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontWeight:
+                                  'bold',
+                                color:
+                                  '#059669'
+                              }}
+                            >
+                              {
+                                art.price
+                              }
+                            </span>
+
+                            <button
+                              onClick={(
+                                e
+                              ) => {
+                                e.stopPropagation();
+
+                                triggerBuyProcess(
+                                  art
+                                );
+                              }}
+                              style={{
+                                backgroundColor:
+                                  '#10b981',
+                                color:
+                                  'white',
+                                border:
+                                  'none',
+                                padding:
+                                  '6px 10px',
+                                borderRadius:
+                                  '6px',
+                                fontSize:
+                                  '0.8rem',
+                                fontWeight:
+                                  'bold',
+                                cursor:
+                                  'pointer'
+                              }}
+                            >
+                              Satın Al
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )
-                )}
-              </div>
+                    )
+                  )}
+                </div>
+              )}
             </section>
 
-            {/* ESER YÜKLEME */}
+            {/* =================================================
+                ESER YÜKLEME
+            ================================================= */}
 
             <section
               style={{
@@ -1092,15 +1384,12 @@ export default function Home() {
                 <input
                   type="text"
                   placeholder="Eser Adı"
-                  value={
-                    title
-                  }
+                  value={title}
                   onChange={(
                     e
                   ) =>
                     setTitle(
-                      e.target
-                        .value
+                      e.target.value
                     )
                   }
                   required
@@ -1110,7 +1399,9 @@ export default function Home() {
                     borderRadius:
                       '6px',
                     border:
-                      '1px solid #d1d5db'
+                      '1px solid #d1d5db',
+                    fontSize:
+                      '16px'
                   }}
                 />
 
@@ -1123,8 +1414,7 @@ export default function Home() {
                     e
                   ) =>
                     setDescription(
-                      e.target
-                        .value
+                      e.target.value
                     )
                   }
                   rows="2"
@@ -1134,22 +1424,23 @@ export default function Home() {
                     borderRadius:
                       '6px',
                     border:
-                      '1px solid #d1d5db'
+                      '1px solid #d1d5db',
+                    fontSize:
+                      '16px',
+                    resize:
+                      'vertical'
                   }}
                 />
 
                 <input
                   type="text"
                   placeholder="İletişim / Telefon Numarası"
-                  value={
-                    phone
-                  }
+                  value={phone}
                   onChange={(
                     e
                   ) =>
                     setPhone(
-                      e.target
-                        .value
+                      e.target.value
                     )
                   }
                   required
@@ -1159,7 +1450,9 @@ export default function Home() {
                     borderRadius:
                       '6px',
                     border:
-                      '1px solid #d1d5db'
+                      '1px solid #d1d5db',
+                    fontSize:
+                      '16px'
                   }}
                 />
 
@@ -1224,7 +1517,11 @@ export default function Home() {
                         cursor:
                           'pointer',
                         display:
-                          'inline-block'
+                          'inline-block',
+                        opacity:
+                          uploading
+                            ? 0.5
+                            : 1
                       }}
                     >
                       📷 Kamera ile
@@ -1235,17 +1532,17 @@ export default function Home() {
                         type="file"
                         accept="image/*"
                         capture="environment"
+                        disabled={
+                          uploading
+                        }
                         onChange={(
                           e
                         ) => {
                           const file =
-                            e
-                              .target
+                            e.target
                               .files?.[0];
 
-                          if (
-                            file
-                          ) {
+                          if (file) {
                             handleImageSelect(
                               file
                             );
@@ -1258,7 +1555,7 @@ export default function Home() {
                       />
                     </label>
 
-                    {/* GALERİ / DOSYA */}
+                    {/* GALERİ */}
 
                     <label
                       style={{
@@ -1277,7 +1574,11 @@ export default function Home() {
                         cursor:
                           'pointer',
                         display:
-                          'inline-block'
+                          'inline-block',
+                        opacity:
+                          uploading
+                            ? 0.5
+                            : 1
                       }}
                     >
                       📁 Galeri /
@@ -1287,17 +1588,17 @@ export default function Home() {
                         id="gallery-image-input"
                         type="file"
                         accept="image/*"
+                        disabled={
+                          uploading
+                        }
                         onChange={(
                           e
                         ) => {
                           const file =
-                            e
-                              .target
+                            e.target
                               .files?.[0];
 
-                          if (
-                            file
-                          ) {
+                          if (file) {
                             handleImageSelect(
                               file
                             );
@@ -1359,47 +1660,12 @@ export default function Home() {
 
                       <button
                         type="button"
-                        onClick={() => {
-                          setImageFile(
-                            null
-                          );
-
-                          if (
-                            imagePreview
-                          ) {
-                            URL.revokeObjectURL(
-                              imagePreview
-                            );
-                          }
-
-                          setImagePreview(
-                            null
-                          );
-
-                          const cameraInput =
-                            document.getElementById(
-                              'camera-image-input'
-                            );
-
-                          const galleryInput =
-                            document.getElementById(
-                              'gallery-image-input'
-                            );
-
-                          if (
-                            cameraInput
-                          ) {
-                            cameraInput.value =
-                              '';
-                          }
-
-                          if (
-                            galleryInput
-                          ) {
-                            galleryInput.value =
-                              '';
-                          }
-                        }}
+                        disabled={
+                          uploading
+                        }
+                        onClick={
+                          resetImageSelection
+                        }
                         style={{
                           marginTop:
                             '5px',
@@ -1414,7 +1680,9 @@ export default function Home() {
                           borderRadius:
                             '5px',
                           cursor:
-                            'pointer',
+                            uploading
+                              ? 'not-allowed'
+                              : 'pointer',
                           fontSize:
                             '0.75rem'
                         }}
@@ -1449,7 +1717,9 @@ export default function Home() {
                     cursor:
                       uploading
                         ? 'not-allowed'
-                        : 'pointer'
+                        : 'pointer',
+                    fontSize:
+                      '15px'
                   }}
                 >
                   {uploading
@@ -1461,7 +1731,9 @@ export default function Home() {
           </>
         )}
 
-        {/* SİPARİŞLER */}
+        {/* ===================================================
+            SİPARİŞLER
+        =================================================== */}
 
         {activeTab ===
           'my_orders' && (
@@ -1626,8 +1898,7 @@ export default function Home() {
                               ) =>
                                 updateOrderStatus(
                                   order.id,
-                                  e
-                                    .target
+                                  e.target
                                     .value
                                 )
                               }
@@ -1665,10 +1936,15 @@ export default function Home() {
         )}
       </main>
 
-      {/* GİRİŞ MODALI */}
+      {/* =====================================================
+          GİRİŞ / KAYIT MODALI
+      ===================================================== */}
 
       {showAuthModal && (
         <div
+          onClick={() =>
+            setShowAuthModal(false)
+          }
           style={{
             position:
               'fixed',
@@ -1687,6 +1963,9 @@ export default function Home() {
           }}
         >
           <div
+            onClick={(e) =>
+              e.stopPropagation()
+            }
             style={{
               backgroundColor:
                 'white',
@@ -1736,8 +2015,7 @@ export default function Home() {
                     e
                   ) =>
                     setUsername(
-                      e.target
-                        .value
+                      e.target.value
                     )
                   }
                   required
@@ -1747,7 +2025,9 @@ export default function Home() {
                     borderRadius:
                       '6px',
                     border:
-                      '1px solid #d1d5db'
+                      '1px solid #d1d5db',
+                    fontSize:
+                      '16px'
                   }}
                 />
               )}
@@ -1755,15 +2035,12 @@ export default function Home() {
               <input
                 type="email"
                 placeholder="E-posta"
-                value={
-                  email
-                }
+                value={email}
                 onChange={(
                   e
                 ) =>
                   setEmail(
-                    e.target
-                      .value
+                    e.target.value
                   )
                 }
                 required
@@ -1773,22 +2050,21 @@ export default function Home() {
                   borderRadius:
                     '6px',
                   border:
-                    '1px solid #d1d5db'
+                    '1px solid #d1d5db',
+                  fontSize:
+                    '16px'
                 }}
               />
 
               <input
                 type="password"
                 placeholder="Şifre"
-                value={
-                  password
-                }
+                value={password}
                 onChange={(
                   e
                 ) =>
                   setPassword(
-                    e.target
-                      .value
+                    e.target.value
                   )
                 }
                 required
@@ -1798,7 +2074,9 @@ export default function Home() {
                   borderRadius:
                     '6px',
                   border:
-                    '1px solid #d1d5db'
+                    '1px solid #d1d5db',
+                  fontSize:
+                    '16px'
                 }}
               />
 
@@ -1858,7 +2136,9 @@ export default function Home() {
                   color:
                     '#2563eb',
                   cursor:
-                    'pointer'
+                    'pointer',
+                  textAlign:
+                    'left'
                 }}
               >
                 {authMode ===
@@ -1891,10 +2171,20 @@ export default function Home() {
         </div>
       )}
 
-      {/* ÖDEME MODALI */}
+      {/* =====================================================
+          ÖDEME MODALI
+      ===================================================== */}
 
       {showPaymentModal && (
         <div
+          onClick={() => {
+            setShowPaymentModal(
+              false
+            );
+            setShowExchangeInfo(
+              false
+            );
+          }}
           style={{
             position:
               'fixed',
@@ -1913,6 +2203,9 @@ export default function Home() {
           }}
         >
           <div
+            onClick={(e) =>
+              e.stopPropagation()
+            }
             style={{
               backgroundColor:
                 'white',
@@ -2012,11 +2305,17 @@ export default function Home() {
                 </button>
 
                 <button
-                  onClick={() =>
+                  onClick={() => {
                     setShowPaymentModal(
                       false
-                    )
-                  }
+                    );
+                    setShowExchangeInfo(
+                      false
+                    );
+                    setPendingArtData(
+                      null
+                    );
+                  }}
                   style={{
                     backgroundColor:
                       '#9ca3af',
@@ -2148,10 +2447,15 @@ export default function Home() {
         </div>
       )}
 
-      {/* ESER DETAY MODALI */}
+      {/* =====================================================
+          ESER DETAY MODALI
+      ===================================================== */}
 
       {selectedArt && (
         <div
+          onClick={() =>
+            setSelectedArt(null)
+          }
           style={{
             position:
               'fixed',
@@ -2170,6 +2474,9 @@ export default function Home() {
           }}
         >
           <div
+            onClick={(e) =>
+              e.stopPropagation()
+            }
             style={{
               backgroundColor:
                 'white',
@@ -2182,7 +2489,11 @@ export default function Home() {
               padding:
                 '20px',
               position:
-                'relative'
+                'relative',
+              maxHeight:
+                '90vh',
+              overflowY:
+                'auto'
             }}
           >
             <button
@@ -2219,6 +2530,12 @@ export default function Home() {
               alt={
                 selectedArt.title
               }
+              onError={(
+                e
+              ) => {
+                e.currentTarget.src =
+                  'https://picsum.photos/seed/default/1200/800';
+              }}
               style={{
                 width:
                   '100%',
@@ -2297,7 +2614,9 @@ export default function Home() {
                 justifyContent:
                   'space-between',
                 alignItems:
-                  'center'
+                  'center',
+                gap:
+                  '10px'
               }}
             >
               <span
@@ -2352,3 +2671,5 @@ export default function Home() {
     </div>
   );
 }
+Önemli: Bu kod tarafında Storage yükleme işlemini daha düzgün hale getirdim. Fakat resim yüklerken hâlâ “new row violates row-level security policy”, “row-level security”, “Unauthorized” veya “permission denied” gibi bir hata çıkarsa sorun artık bu React kodunda değil, Supabase artworks Storage bucket/policy ayarlarında demektir.
+Önce bu kodu yapıştırıp Vercel'de çalıştır. Resim yüklemeyi bir kez dene. Hata çıkarsa bana çıkan hata mesajının ekran görüntüsünü gönder; bir sonraki adımda Supabase tarafındaki gerekli ayarı birlikte düzeltebiliriz.
