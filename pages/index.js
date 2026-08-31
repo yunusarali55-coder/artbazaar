@@ -2671,5 +2671,3 @@ export default function Home() {
     </div>
   );
 }
-Önemli: Bu kod tarafında Storage yükleme işlemini daha düzgün hale getirdim. Fakat resim yüklerken hâlâ “new row violates row-level security policy”, “row-level security”, “Unauthorized” veya “permission denied” gibi bir hata çıkarsa sorun artık bu React kodunda değil, Supabase artworks Storage bucket/policy ayarlarında demektir.
-Önce bu kodu yapıştırıp Vercel'de çalıştır. Resim yüklemeyi bir kez dene. Hata çıkarsa bana çıkan hata mesajının ekran görüntüsünü gönder; bir sonraki adımda Supabase tarafındaki gerekli ayarı birlikte düzeltebiliriz.
