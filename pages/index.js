@@ -231,7 +231,7 @@ export default function Home() {
   };
 
   // =========================================================
-  // RESİMİ KÜÇÜLT
+  // RESMİ KÜÇÜLT
   // =========================================================
 
   const compressImage = (file) => {
@@ -415,11 +415,70 @@ export default function Home() {
       // 1. RESMİ SIKIŞTIR
       // -----------------------------------------------------
 
+      console.log('Resim sıkıştırılıyor...');
+
       const compressedBlob =
         await compressImage(imageFile);
 
+      console.log(
+        'Sıkıştırılmış resim boyutu:',
+        compressedBlob.size,
+        'bytes'
+      );
+
+      if (!compressedBlob || compressedBlob.size === 0) {
+        throw new Error(
+          'Sıkıştırılmış resim boş oluştu.'
+        );
+      }
+
       // -----------------------------------------------------
-      // 2. BENZERSİZ DOSYA ADI OLUŞTUR
+      // 2. SUPABASE STORAGE BAĞLANTI TESTİ
+      // -----------------------------------------------------
+
+      console.log(
+        'Supabase Storage bağlantısı test ediliyor...'
+      );
+
+      console.log(
+        'SUPABASE URL:',
+        SUPABASE_URL
+      );
+
+      try {
+        const testResponse = await fetch(
+          `${SUPABASE_URL}/storage/v1/bucket/artworks`,
+          {
+            method: 'GET',
+            headers: {
+              apikey: SUPABASE_KEY,
+              Authorization:
+                `Bearer ${SUPABASE_KEY}`
+            }
+          }
+        );
+
+        const testText =
+          await testResponse.text();
+
+        console.log(
+          'Supabase Storage bağlantı testi:',
+          testResponse.status,
+          testText
+        );
+      } catch (connectionError) {
+        console.error(
+          'SUPABASE STORAGE BAĞLANTI HATASI:',
+          connectionError
+        );
+
+        throw new Error(
+          'Supabase Storage sunucusuna bağlanılamadı. İnternet bağlantınızı ve Supabase URL adresini kontrol edin.'
+        );
+      }
+
+      // -----------------------------------------------------
+      // 3. BENZERSİZ DOSYA ADI
       // -----------------------------------------------------
 
       const uniqueName =
@@ -436,8 +495,12 @@ export default function Home() {
       );
 
       // -----------------------------------------------------
-      // 3. SUPABASE STORAGE'A YÜKLE
+      // 4. SUPABASE STORAGE'A YÜKLE
       // -----------------------------------------------------
+
+      console.log(
+        'Storage upload başlıyor...'
+      );
 
       const {
         data: uploadData,
@@ -459,6 +522,11 @@ export default function Home() {
         uploadData
       );
 
+      console.log(
+        'Storage upload hatası:',
+        uploadError
+      );
+
       if (uploadError) {
         console.error(
           'Storage upload hatası:',
@@ -466,12 +534,18 @@ export default function Home() {
         );
 
         throw new Error(
-          `Resim yüklenemedi: ${uploadError.message}`
+          `Resim yüklenemedi: ${uploadError.message || 'Bilinmeyen Storage hatası'}`
+        );
+      }
+
+      if (!uploadData) {
+        throw new Error(
+          'Supabase resmi yükledi fakat upload sonucu boş döndü.'
         );
       }
 
       // -----------------------------------------------------
-      // 4. PUBLIC URL AL
+      // 5. PUBLIC URL AL
       // -----------------------------------------------------
 
       const {
@@ -497,7 +571,7 @@ export default function Home() {
       }
 
       // -----------------------------------------------------
-      // 5. ARTWORKS TABLOSUNA KAYDET
+      // 6. ARTWORKS TABLOSUNA KAYDET
       // -----------------------------------------------------
 
       const artworkData = {
@@ -561,13 +635,13 @@ export default function Home() {
       }
 
       // -----------------------------------------------------
-      // 6. FORMU TEMİZLE
+      // 7. FORMU TEMİZLE
       // -----------------------------------------------------
 
       resetListingForm();
 
       // -----------------------------------------------------
-      // 7. LİSTEYİ YENİLE
+      // 8. LİSTEYİ YENİLE
       // -----------------------------------------------------
 
       await fetchArtworksFromSupabase();
@@ -1041,8 +1115,6 @@ export default function Home() {
         {activeTab ===
           'explore' && (
           <>
-            {/* HERO */}
-
             <div
               style={{
                 textAlign:
@@ -1085,10 +1157,6 @@ export default function Home() {
                 keşfedin.
               </p>
             </div>
-
-            {/* =================================================
-                VİTRİN
-            ================================================= */}
 
             <section
               style={{
@@ -1316,10 +1384,6 @@ export default function Home() {
               )}
             </section>
 
-            {/* =================================================
-                ESER YÜKLEME
-            ================================================= */}
-
             <section
               style={{
                 maxWidth:
@@ -1455,8 +1519,6 @@ export default function Home() {
                   }}
                 />
 
-                {/* FOTOĞRAF ALANI */}
-
                 <div
                   style={{
                     border:
@@ -1497,8 +1559,6 @@ export default function Home() {
                         'wrap'
                     }}
                   >
-                    {/* KAMERA */}
-
                     <label
                       style={{
                         backgroundColor:
@@ -1554,8 +1614,6 @@ export default function Home() {
                       />
                     </label>
 
-                    {/* GALERİ */}
-
                     <label
                       style={{
                         backgroundColor:
@@ -1610,8 +1668,6 @@ export default function Home() {
                       />
                     </label>
                   </div>
-
-                  {/* ÖNİZLEME */}
 
                   {imagePreview && (
                     <div
