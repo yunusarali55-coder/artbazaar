@@ -31,11 +31,18 @@ export default function Home() {
   const [selectedArt, setSelectedArt] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [pendingArtData, setPendingArtData] = useState(null);
+  const [selectedCurrency, setSelectedCurrency] = useState('TL');
 
   const [orders, setOrders] = useState([]);
   const [activeTab, setActiveTab] = useState('explore');
 
-  const platformEscrowIban = 'TR33 0006 1005 2000 1234 5678 90 (Efnan Güvenli Havuz Hesabı)';
+  // Yunus Aralı İş Bankası Hesap Bilgileri (Havuz / Platform Hesapları)
+  const escrowAccounts = {
+    accountHolder: 'Yunus Aralı',
+    bankName: 'Türkiye İş Bankası',
+    tlIban: 'TR41 0006 4000 0017 3003 4172 52',
+    usdIban: 'TR76 0006 4000 0027 3004 0573 02'
+  };
 
   const [listings, setListings] = useState([
     {
@@ -46,7 +53,7 @@ export default function Home() {
       isOriginal: 'Orijinal',
       artist: 'Yunus Aralı',
       phone: '05443433881',
-      iban: 'TR12 3456 7890 1234 5678 9012 34',
+      iban: 'TR41 0006 4000 0017 3003 4172 52',
       price: '3.500 ₺',
       image: 'https://picsum.photos/seed/art1/1200/800',
       status: 'Satışta'
@@ -113,7 +120,7 @@ export default function Home() {
           isOriginal: 'Orijinal',
           artist: 'Yunus Aralı',
           phone: '05443433881',
-          iban: 'TR12 3456 7890 1234 5678 9012 34',
+          iban: 'TR41 0006 4000 0017 3003 4172 52',
           price: '3.500 ₺',
           image: 'https://picsum.photos/seed/art1/1200/800',
           status: 'Satışta'
@@ -329,6 +336,8 @@ export default function Home() {
   const confirmOrderWithEscrow = () => {
     if (!pendingArtData || !currentUser) return;
 
+    const usedIban = selectedCurrency === 'TL' ? escrowAccounts.tlIban : escrowAccounts.usdIban;
+
     const newOrder = {
       id: Date.now(),
       artTitle: pendingArtData.title,
@@ -337,7 +346,8 @@ export default function Home() {
       sellerIban: pendingArtData.iban,
       price: pendingArtData.price,
       buyer: currentUser.username,
-      paymentMethod: 'Güvenli Havuz Hesabı (Escrow)',
+      paymentMethod: `Güvenli Havuz (${selectedCurrency} - İş Bankası)`,
+      escrowIbanUsed: usedIban,
       status: 'Ödemeniz Havuzda Güvende - Kargo Bekleniyor',
       date: new Date().toLocaleDateString('tr-TR')
     };
@@ -486,6 +496,8 @@ export default function Home() {
                   <h3 style={{ margin: '0 0 6px 0', fontSize: '1.1rem' }}>{order.artTitle}</h3>
                   <p style={{ fontSize: '0.85rem', color: '#4b5563', margin: '2px 0' }}>Satıcı: <b>{order.artist}</b> | Tutar: <b style={{ color: '#059669' }}>{order.price}</b></p>
                   <p style={{ fontSize: '0.85rem', color: '#4b5563', margin: '2px 0' }}>İletişim: <b>{order.phone}</b></p>
+                  <p style={{ fontSize: '0.85rem', color: '#4b5563', margin: '2px 0' }}>Kullanılan Havuz Ödeme Yöntemi: <b>{order.paymentMethod}</b></p>
+                  <code style={{ fontSize: '0.75rem', color: '#1d4ed8', display: 'block', margin: '4px 0' }}>İşlem Yapılan Havuz IBAN: {order.escrowIbanUsed}</code>
                   <p style={{ fontSize: '0.85rem', marginTop: '8px' }}>Durum: <b style={{ color: '#2563eb' }}>{order.status}</b></p>
                   
                   {order.status.includes('Güvende') && (
@@ -525,21 +537,36 @@ export default function Home() {
         </div>
       )}
 
-      {/* Güvenli Ödeme / Escrow Açıklama Modalı */}
+      {/* Güvenli Ödeme / Escrow Açıklama Modalı (Yunus Aralı İş Bankası Hesapları) */}
       {showPaymentModal && pendingArtData && (
         <div onClick={() => setShowPaymentModal(false)} style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1100, padding: '16px' }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '440px', width: '100%', padding: '22px' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '460px', width: '100%', padding: '22px', maxHeight: '90vh', overflowY: 'auto' }}>
             <h3 style={{ marginTop: 0, color: '#1f2937' }}>🛡️ Güvenli Emanet Ödemesi (Escrow)</h3>
             <p style={{ fontSize: '0.85rem', color: '#4b5563', lineHeight: '1.4' }}>
-              Paranız doğrudan satıcıya gitmez! <b>Efnan ArtBazaar Güvenli Havuz Hesabında</b> tamamen güvende tutulur. Kargo elinize ulaşıp ürünü kontrol ettikten sonra panelden onay verdiğinizde ödeme satıcıya aktarılır.
+              Paranız doğrudan satıcıya gitmez! <b>{escrowAccounts.accountHolder}</b> adına kayıtlı İş Bankası güvenli havuz hesabında tamamen güvende tutulur. Kargo elinize ulaşıp ürünü kontrol ettikten sonra onay verdiğinizde ödeme serbest bırakılır.
             </p>
+
+            <div style={{ margin: '12px 0' }}>
+              <label style={{ fontSize: '0.8rem', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>Ödeme Yapılacak Para Birimini Seçin:</label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button type="button" onClick={() => setSelectedCurrency('TL')} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: selectedCurrency === 'TL' ? '2px solid #4f46e5' : '1px solid #d1d5db', backgroundColor: selectedCurrency === 'TL' ? '#eef2ff' : 'white', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>🇹🇷 Vadesiz TL Hesabı</button>
+                <button type="button" onClick={() => setSelectedCurrency('USD')} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: selectedCurrency === 'USD' ? '2px solid #4f46e5' : '1px solid #d1d5db', backgroundColor: selectedCurrency === 'USD' ? '#eef2ff' : 'white', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>🇺🇸 Vadesiz USD Hesabı</button>
+              </div>
+            </div>
+
             <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', padding: '12px', borderRadius: '8px', margin: '12px 0', fontSize: '0.85rem' }}>
               <p style={{ margin: '2px 0' }}><b>Ürün:</b> {pendingArtData.title}</p>
               <p style={{ margin: '2px 0' }}><b>Ödenecek Tutar:</b> <span style={{ color: '#059669', fontWeight: 'bold' }}>{pendingArtData.price}</span></p>
-              <p style={{ margin: '6px 0 2px 0' }}><b>Yatırılacak Güvenli Havuz IBAN:</b></p>
-              <code style={{ wordBreak: 'break-all', color: '#1d4ed8', display: 'block', fontWeight: 'bold' }}>{platformEscrowIban}</code>
+              <hr style={{ border: '0', borderTop: '1px solid #bfdbfe', margin: '8px 0' }} />
+              <p style={{ margin: '2px 0' }}><b>Hesap Sahibi:</b> {escrowAccounts.accountHolder}</p>
+              <p style={{ margin: '2px 0' }}><b>Banka:</b> {escrowAccounts.bankName} ({selectedCurrency === 'TL' ? 'Vadesiz TL' : 'Vadesiz USD'})</p>
+              <p style={{ margin: '6px 0 2px 0' }}><b>Havuz IBAN Numarası:</b></p>
+              <code style={{ wordBreak: 'break-all', color: '#1d4ed8', display: 'block', fontWeight: 'bold', backgroundColor: 'white', padding: '6px', borderRadius: '4px', border: '1px solid #93c5fd' }}>
+                {selectedCurrency === 'TL' ? escrowAccounts.tlIban : escrowAccounts.usdIban}
+              </code>
             </div>
-            <button onClick={confirmOrderWithEscrow} style={{ backgroundColor: '#059669', color: 'white', border: 'none', padding: '12px', borderRadius: '6px', width: '100%', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}>Havale Yaptım, Güvenli Alışverişi Başlat</button>
+
+            <button onClick={confirmOrderWithEscrow} style={{ backgroundColor: '#059669', color: 'white', border: 'none', padding: '12px', borderRadius: '6px', width: '100%', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}>Havale / EFT Yaptım, Güvenli Alışverişi Başlat</button>
             <button onClick={() => setShowPaymentModal(false)} style={{ background: 'none', border: 'none', color: '#4f46e5', cursor: 'pointer', width: '100%', marginTop: '10px', fontSize: '0.85rem' }}>Vazgeç</button>
           </div>
         </div>
