@@ -32,6 +32,7 @@ export default function Home() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [pendingArtData, setPendingArtData] = useState(null);
   const [selectedCurrency, setSelectedCurrency] = useState('TL');
+  const [paymentMethodType, setPaymentMethodType] = useState('havale'); // 'havale' veya 'kart'
 
   const [orders, setOrders] = useState([]);
   const [activeTab, setActiveTab] = useState('explore');
@@ -333,6 +334,7 @@ export default function Home() {
     setShowPaymentModal(true);
   };
 
+  // 1. ADIM: Siparişi ilk oluşturduğumuzda Ödeme Bekleniyor (pending_payment) statüsüyle kaydedilir.
   const confirmOrderWithEscrow = () => {
     if (!pendingArtData || !currentUser) return;
 
@@ -348,7 +350,8 @@ export default function Home() {
       buyer: currentUser.username,
       paymentMethod: `Güvenli Havuz (${selectedCurrency} - İş Bankası)`,
       escrowIbanUsed: usedIban,
-      status: 'Ödemeniz Havuzda Güvende - Kargo Bekleniyor',
+      status: 'pending_payment', // DÜZELTME: İlk başta ödeme yapılması beklenir!
+      statusText: 'Ödeme Bekleniyor - Lütfen Ödemeyi Tamamlayın',
       date: new Date().toLocaleDateString('tr-TR')
     };
 
@@ -358,16 +361,35 @@ export default function Home() {
 
     setShowPaymentModal(false);
     setPendingArtData(null);
-    alert('✅ Siparişiniz oluşturuldu! Ödemeniz güvence altındadır. Ürün elinize ulaştıktan sonra onay vermeyi unutmayın.');
+    alert('✅ Siparişiniz oluşturuldu! Ödeme adımını tamamlamak için "Siparişlerim" sayfasından ödeme işlemini gerçekleştirebilirsiniz.');
     setActiveTab('my_orders');
   };
 
+  // 2. ADIM: Kullanıcı "Ödemeyi Tamamla" butonuna bastığında ödeme onaylanır ve kargo beklemeye geçer.
+  const completePaymentForOrder = (orderId) => {
+    const updated = orders.map((order) => {
+      if (order.id === orderId) {
+        return {
+          ...order,
+          status: 'shipping_expected',
+          statusText: 'Ödemeniz Havuzda Güvende - Kargo Bekleniyor'
+        };
+      }
+      return order;
+    });
+    setOrders(updated);
+    localStorage.setItem('efnan_orders', JSON.stringify(updated));
+    alert('🎉 Ödemeniz başarıyla alındı ve güvenli havuz hesabına aktarıldı! Satıcı kargolama için bilgilendirildi.');
+  };
+
+  // 3. ADIM: Ürün teslim alındığında ödeme satıcıya serbest bırakılır.
   const confirmDelivery = (orderId) => {
     const updated = orders.map((order) => {
       if (order.id === orderId) {
         return {
           ...order,
-          status: 'Teslim Alındı - Ödeme Satıcıya Aktarıldı ✅'
+          status: 'completed',
+          statusText: 'Teslim Alındı - Ödeme Satıcıya Aktarıldı ✅'
         };
       }
       return order;
@@ -498,10 +520,18 @@ export default function Home() {
                   <p style={{ fontSize: '0.85rem', color: '#4b5563', margin: '2px 0' }}>İletişim: <b>{order.phone}</b></p>
                   <p style={{ fontSize: '0.85rem', color: '#4b5563', margin: '2px 0' }}>Kullanılan Havuz Ödeme Yöntemi: <b>{order.paymentMethod}</b></p>
                   <code style={{ fontSize: '0.75rem', color: '#1d4ed8', display: 'block', margin: '4px 0' }}>İşlem Yapılan Havuz IBAN: {order.escrowIbanUsed}</code>
-                  <p style={{ fontSize: '0.85rem', marginTop: '8px' }}>Durum: <b style={{ color: '#2563eb' }}>{order.status}</b></p>
+                  <p style={{ fontSize: '0.85rem', marginTop: '8px' }}>Durum: <b style={{ color: '#2563eb' }}>{order.statusText || order.status}</b></p>
                   
-                  {order.status.includes('Güvende') && (
-                    <button onClick={() => confirmDelivery(order.id)} style={{ marginTop: '12px', backgroundColor: '#059669', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>
+                  {/* DURUM 1: Henüz ödeme yapılmadıysa Ödemeyi Tamamla butonu göster */}
+                  {order.status === 'pending_payment' && (
+                    <button onClick={() => completePaymentForOrder(order.id)} style={{ marginTop: '12px', backgroundColor: '#2563eb', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem', width: '100%' }}>
+                      💳 Ödemeyi Tamamla (Kredi Kartı / Havale Onayla)
+                    </button>
+                  )}
+
+                  {/* DURUM 2: Ödeme yapıldı, kargo bekleniyorsa teslimat onayı göster */}
+                  {order.status === 'shipping_expected' && (
+                    <button onClick={() => confirmDelivery(order.id)} style={{ marginTop: '12px', backgroundColor: '#059669', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem', width: '100%' }}>
                       📦 Ürünü Teslim Aldım, Onayla ve Ödemeyi Serbest Bırak
                     </button>
                   )}
@@ -547,26 +577,44 @@ export default function Home() {
             </p>
 
             <div style={{ margin: '12px 0' }}>
-              <label style={{ fontSize: '0.8rem', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>Ödeme Yapılacak Para Birimini Seçin:</label>
+              <label style={{ fontSize: '0.8rem', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>Ödeme Yöntemi Seçin:</label>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                <button type="button" onClick={() => setPaymentMethodType('havale')} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: paymentMethodType === 'havale' ? '2px solid #4f46e5' : '1px solid #d1d5db', backgroundColor: paymentMethodType === 'havale' ? '#eef2ff' : 'white', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.8rem' }}>🏦 Hav / EFT ile Öde</button>
+                <button type="button" onClick={() => setPaymentMethodType('kart')} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: paymentMethodType === 'kart' ? '2px solid #4f46e5' : '1px solid #d1d5db', backgroundColor: paymentMethodType === 'kart' ? '#eef2ff' : 'white', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.8rem' }}>💳 Kredi Kartı ile Öde</button>
+              </div>
+
+              <label style={{ fontSize: '0.8rem', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>Para Birimi:</label>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button type="button" onClick={() => setSelectedCurrency('TL')} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: selectedCurrency === 'TL' ? '2px solid #4f46e5' : '1px solid #d1d5db', backgroundColor: selectedCurrency === 'TL' ? '#eef2ff' : 'white', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>🇹🇷 Vadesiz TL Hesabı</button>
                 <button type="button" onClick={() => setSelectedCurrency('USD')} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: selectedCurrency === 'USD' ? '2px solid #4f46e5' : '1px solid #d1d5db', backgroundColor: selectedCurrency === 'USD' ? '#eef2ff' : 'white', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>🇺🇸 Vadesiz USD Hesabı</button>
               </div>
             </div>
 
-            <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', padding: '12px', borderRadius: '8px', margin: '12px 0', fontSize: '0.85rem' }}>
-              <p style={{ margin: '2px 0' }}><b>Ürün:</b> {pendingArtData.title}</p>
-              <p style={{ margin: '2px 0' }}><b>Ödenecek Tutar:</b> <span style={{ color: '#059669', fontWeight: 'bold' }}>{pendingArtData.price}</span></p>
-              <hr style={{ border: '0', borderTop: '1px solid #bfdbfe', margin: '8px 0' }} />
-              <p style={{ margin: '2px 0' }}><b>Hesap Sahibi:</b> {escrowAccounts.accountHolder}</p>
-              <p style={{ margin: '2px 0' }}><b>Banka:</b> {escrowAccounts.bankName} ({selectedCurrency === 'TL' ? 'Vadesiz TL' : 'Vadesiz USD'})</p>
-              <p style={{ margin: '6px 0 2px 0' }}><b>Havuz IBAN Numarası:</b></p>
-              <code style={{ wordBreak: 'break-all', color: '#1d4ed8', display: 'block', fontWeight: 'bold', backgroundColor: 'white', padding: '6px', borderRadius: '4px', border: '1px solid #93c5fd' }}>
-                {selectedCurrency === 'TL' ? escrowAccounts.tlIban : escrowAccounts.usdIban}
-              </code>
-            </div>
+            {paymentMethodType === 'havale' ? (
+              <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', padding: '12px', borderRadius: '8px', margin: '12px 0', fontSize: '0.85rem' }}>
+                <p style={{ margin: '2px 0' }}><b>Ürün:</b> {pendingArtData.title}</p>
+                <p style={{ margin: '2px 0' }}><b>Ödenecek Tutar:</b> <span style={{ color: '#059669', fontWeight: 'bold' }}>{pendingArtData.price}</span></p>
+                <hr style={{ border: '0', borderTop: '1px solid #bfdbfe', margin: '8px 0' }} />
+                <p style={{ margin: '2px 0' }}><b>Hesap Sahibi:</b> {escrowAccounts.accountHolder}</p>
+                <p style={{ margin: '2px 0' }}><b>Banka:</b> {escrowAccounts.bankName} ({selectedCurrency === 'TL' ? 'Vadesiz TL' : 'Vadesiz USD'})</p>
+                <p style={{ margin: '6px 0 2px 0' }}><b>Havuz IBAN Numarası:</b></p>
+                <code style={{ wordBreak: 'break-all', color: '#1d4ed8', display: 'block', fontWeight: 'bold', backgroundColor: 'white', padding: '6px', borderRadius: '4px', border: '1px solid #93c5fd' }}>
+                  {selectedCurrency === 'TL' ? escrowAccounts.tlIban : escrowAccounts.usdIban}
+                </code>
+              </div>
+            ) : (
+              <div style={{ backgroundColor: '#fdf2f8', border: '1px solid #fbcfe8', padding: '12px', borderRadius: '8px', margin: '12px 0', fontSize: '0.85rem' }}>
+                <p style={{ margin: '0 0 8px 0', fontWeight: 'bold', color: '#be185d' }}>Kredi Kartı ile Güvenli Ödeme Formu</p>
+                <input type="text" placeholder="Kart Üzerindeki İsim" style={{ width: '100%', padding: '8px', marginBottom: '6px', borderRadius: '4px', border: '1px solid #cbd5e1' }} />
+                <input type="text" placeholder="Kart Numarası (XXXX XXXX XXXX XXXX)" style={{ width: '100%', padding: '8px', marginBottom: '6px', borderRadius: '4px', border: '1px solid #cbd5e1' }} />
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <input type="text" placeholder="AA/YY" style={{ flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid #cbd5e1' }} />
+                  <input type="text" placeholder="CVV" style={{ flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid #cbd5e1' }} />
+                </div>
+              </div>
+            )}
 
-            <button onClick={confirmOrderWithEscrow} style={{ backgroundColor: '#059669', color: 'white', border: 'none', padding: '12px', borderRadius: '6px', width: '100%', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}>Havale / EFT Yaptım, Güvenli Alışverişi Başlat</button>
+            <button onClick={confirmOrderWithEscrow} style={{ backgroundColor: '#059669', color: 'white', border: 'none', padding: '12px', borderRadius: '6px', width: '100%', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}>Siparişi Tamamla ve Ödeme Adımına Geç</button>
             <button onClick={() => setShowPaymentModal(false)} style={{ background: 'none', border: 'none', color: '#4f46e5', cursor: 'pointer', width: '100%', marginTop: '10px', fontSize: '0.85rem' }}>Vazgeç</button>
           </div>
         </div>
