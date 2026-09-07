@@ -336,7 +336,6 @@ export default function Home() {
       return;
     }
     setPendingArtData(art);
-    // Form alanlarını sıfırla
     setCardHolder('');
     setCardNumber('');
     setCardExpiry('');
@@ -344,17 +343,15 @@ export default function Home() {
     setShowPaymentModal(true);
   };
 
-  // 1. ADIM: Sipariş oluşturulurken Ödeme Bekleniyor (pending_payment) statüsüyle başlar.
   const confirmOrderWithEscrow = () => {
     if (!pendingArtData || !currentUser) return;
 
-    // Eğer Kredi Kartı seçildiyse SAHTE veya EKSİK veri girişini engellemek için sıkı doğrulama yapıyoruz:
     if (paymentMethodType === 'kart') {
       const cleanCardNum = cardNumber.replace(/\D/g, '');
       const cleanCvv = cardCvv.replace(/\D/g, '');
 
       if (!cardHolder.trim() || cardHolder.trim().length < 3) {
-        alert('❌ Lütfen kart üzerindeki geçerli adı soyadı girin (Örn: Yunus Aralı).');
+        alert('❌ Lütfen kart üzerindeki geçerli adı soyadı girin.');
         return;
       }
       if (cleanCardNum.length < 15 || cleanCardNum.length > 16) {
@@ -366,7 +363,7 @@ export default function Home() {
         return;
       }
       if (cleanCvv.length !== 3) {
-        alert('❌ Geçersiz CVV! Güvenlik kodu kartın arkasındaki 3 haneli sayı olmalıdır.');
+        alert('❌ Geçersiz CVV! Güvenlik kodu 3 haneli olmalıdır.');
         return;
       }
     }
@@ -394,11 +391,10 @@ export default function Home() {
 
     setShowPaymentModal(false);
     setPendingArtData(null);
-    alert('✅ Siparişiniz oluşturuldu! Ödemeniz onay bekliyor. Detaylar için "Siparişlerim" sayfasından ödemeyi tamamlayabilirsiniz.');
+    alert('✅ Siparişiniz oluşturuldu! Ödemeniz ürün fiyatına sabitlenmiş olarak onay bekliyor.');
     setActiveTab('my_orders');
   };
 
-  // 2. ADIM: Kullanıcı "Ödemeyi Tamamla" butonuna bastığında gerçek ödeme onayı simüle edilir.
   const completePaymentForOrder = (orderId) => {
     const updated = orders.map((order) => {
       if (order.id === orderId) {
@@ -412,10 +408,9 @@ export default function Home() {
     });
     setOrders(updated);
     localStorage.setItem('efnan_orders', JSON.stringify(updated));
-    alert('🎉 Ödemeniz başarıyla doğrulandı ve güvenli havuz hesabına alındı! Satıcıya kargo talimatı verildi.');
+    alert('🎉 Ödemeniz başarıyla doğrulandı ve güvenli havuz hesabına alındı!');
   };
 
-  // 3. ADIM: Ürün teslim alındığında ödeme satıcıya serbest bırakılır.
   const confirmDelivery = (orderId) => {
     const updated = orders.map((order) => {
       if (order.id === orderId) {
@@ -549,7 +544,7 @@ export default function Home() {
               orders.map((order) => (
                 <div key={order.id} style={{ backgroundColor: 'white', padding: '18px', borderRadius: '10px', marginBottom: '14px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', borderLeft: '4px solid #4f46e5' }}>
                   <h3 style={{ margin: '0 0 6px 0', fontSize: '1.1rem' }}>{order.artTitle}</h3>
-                  <p style={{ fontSize: '0.85rem', color: '#4b5563', margin: '2px 0' }}>Satıcı: <b>{order.artist}</b> | Tutar: <b style={{ color: '#059669' }}>{order.price}</b></p>
+                  <p style={{ fontSize: '0.85rem', color: '#4b5563', margin: '2px 0' }}>Satıcı: <b>{order.artist}</b> | Tutar (Sabit): <b style={{ color: '#059669' }}>{order.price}</b></p>
                   <p style={{ fontSize: '0.85rem', color: '#4b5563', margin: '2px 0' }}>İletişim: <b>{order.phone}</b></p>
                   <p style={{ fontSize: '0.85rem', color: '#4b5563', margin: '2px 0' }}>Ödeme Yöntemi: <b>{order.paymentMethod}</b></p>
                   <code style={{ fontSize: '0.75rem', color: '#1d4ed8', display: 'block', margin: '4px 0' }}>Havuz IBAN: {order.escrowIbanUsed}</code>
@@ -598,13 +593,13 @@ export default function Home() {
         </div>
       )}
 
-      {/* Güvenli Ödeme / Escrow ve Kart Doğrulama Modalı */}
+      {/* Güvenli Ödeme / Escrow ve Kart Doğrulama Modalı (Tutar Tamamen Sabitlendi) */}
       {showPaymentModal && pendingArtData && (
         <div onClick={() => setShowPaymentModal(false)} style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1100, padding: '16px' }}>
           <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '460px', width: '100%', padding: '22px', maxHeight: '90vh', overflowY: 'auto' }}>
             <h3 style={{ marginTop: 0, color: '#1f2937' }}>🛡️ Güvenli Emanet Ödemesi (Escrow)</h3>
             <p style={{ fontSize: '0.85rem', color: '#4b5563', lineHeight: '1.4' }}>
-              Paranız <b>{escrowAccounts.accountHolder}</b> adına kayıtlı İş Bankası havuzunda güvendedir. Kargo onaylanana kadar satıcıya aktarılmaz.
+              Paranız <b>{escrowAccounts.accountHolder}</b> adına kayıtlı İş Bankası havuzunda güvendedir. Tutar ürün fiyatına sabitlenmiştir.
             </p>
 
             <div style={{ margin: '12px 0' }}>
@@ -624,7 +619,7 @@ export default function Home() {
             {paymentMethodType === 'havale' ? (
               <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', padding: '12px', borderRadius: '8px', margin: '12px 0', fontSize: '0.85rem' }}>
                 <p style={{ margin: '2px 0' }}><b>Ürün:</b> {pendingArtData.title}</p>
-                <p style={{ margin: '2px 0' }}><b>Tutar:</b> <span style={{ color: '#059669', fontWeight: 'bold' }}>{pendingArtData.price}</span></p>
+                <p style={{ margin: '2px 0' }}><b>Ödenecek Net Tutar (Sabit):</b> <span style={{ color: '#059669', fontWeight: 'bold', fontSize: '1rem' }}>{pendingArtData.price}</span></p>
                 <hr style={{ border: '0', borderTop: '1px solid #bfdbfe', margin: '8px 0' }} />
                 <p style={{ margin: '2px 0' }}><b>Havuz IBAN:</b></p>
                 <code style={{ wordBreak: 'break-all', color: '#1d4ed8', display: 'block', fontWeight: 'bold', backgroundColor: 'white', padding: '6px', borderRadius: '4px', border: '1px solid #93c5fd' }}>
@@ -633,7 +628,8 @@ export default function Home() {
               </div>
             ) : (
               <div style={{ backgroundColor: '#fdf2f8', border: '1px solid #fbcfe8', padding: '12px', borderRadius: '8px', margin: '12px 0', fontSize: '0.85rem' }}>
-                <p style={{ margin: '0 0 8px 0', fontWeight: 'bold', color: '#be185d' }}>Güvenli Kredi Kartı Ödeme Kontrolü</p>
+                <p style={{ margin: '0 0 4px 0', fontWeight: 'bold', color: '#be185d' }}>Güvenli Kredi Kartı Ödemesi</p>
+                <p style={{ margin: '0 0 8px 0', color: '#4b5563', fontSize: '0.8rem' }}>Tahsil Edilecek Tutar: <b>{pendingArtData.price}</b> (Sabit)</p>
                 <input 
                   type="text" 
                   placeholder="Kart Üzerindeki Ad Soyad" 
@@ -683,7 +679,7 @@ export default function Home() {
             <h3 style={{ marginTop: 0 }}>{authMode === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}</h3>
             <form onSubmit={authMode === 'login' ? handleLogin : handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px' }}>
               {authMode === 'register' && <input type="text" placeholder="Kullanıcı Adı" value={username} onChange={(e) => setUsername(e.target.value)} required style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />}
-              <input type="email" placeholder="E-posta Adresi" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />}
+              <input type="email" placeholder="E-posta Adresi" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
               <input type="password" placeholder="Şifre (En az 6 karakter)" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
               <button type="submit" style={{ backgroundColor: '#4f46e5', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>{authMode === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}</button>
             </form>
