@@ -235,8 +235,9 @@ export default function Home() {
       const uniqueName = `${Date.now()}-${Math.random().toString(36).substring(2, 10)}.jpg`;
       uploadedFilePath = `uploads/${uniqueName}`;
 
+      // BUCKET İSMİ PANELİNİZLE UYUMLU OLARAK 'artworks-images' OLARak GÜNCELLENDİ
       const { error: uploadError } = await supabase.storage
-        .from('artworks')
+        .from('artworks-images')
         .upload(uploadedFilePath, compressedBlob, {
           cacheControl: '3600',
           upsert: false,
@@ -246,7 +247,7 @@ export default function Home() {
       if (uploadError) throw new Error(`Resim yüklenemedi: ${uploadError.message}`);
 
       const { data: publicUrlData } = supabase.storage
-        .from('artworks')
+        .from('artworks-images')
         .getPublicUrl(uploadedFilePath);
 
       const imageUrl = publicUrlData?.publicUrl;
@@ -270,7 +271,7 @@ export default function Home() {
 
       if (insertError) {
         if (uploadedFilePath) {
-          await supabase.storage.from('artworks').remove([uploadedFilePath]);
+          await supabase.storage.from('artworks-images').remove([uploadedFilePath]);
         }
         throw new Error(`Veritabanına kayıt hatası: ${insertError.message}`);
       }
@@ -593,7 +594,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* Güvenli Ödeme / Escrow ve Kart Doğrulama Modalı (Tutar Tamamen Sabitlendi) */}
+      {/* Güvenli Ödeme / Escrow ve Kart Doğrulama Modalı */}
       {showPaymentModal && pendingArtData && (
         <div onClick={() => setShowPaymentModal(false)} style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1100, padding: '16px' }}>
           <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '460px', width: '100%', padding: '22px', maxHeight: '90vh', overflowY: 'auto' }}>
