@@ -32,9 +32,8 @@ export default function Home() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [pendingArtData, setPendingArtData] = useState(null);
   const [selectedCurrency, setSelectedCurrency] = useState('TL');
-  const [paymentMethodType, setPaymentMethodType] = useState('havale'); // 'havale' veya 'kart'
+  const [paymentMethodType, setPaymentMethodType] = useState('havale');
 
-  // Kredi Kartı Form State'leri (Güvenlik Kontrolü İçin)
   const [cardHolder, setCardHolder] = useState('');
   const [cardNumber, setCardNumber] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');
@@ -228,27 +227,33 @@ export default function Home() {
     }
 
     setUploading(true);
-    let uploadedFilePath = null;
 
     try {
       const compressedBlob = await compressImage(imageFile);
       const uniqueName = `${Date.now()}-${Math.random().toString(36).substring(2, 10)}.jpg`;
-      uploadedFilePath = `uploads/${uniqueName}`;
+      const filePath = `uploads/${uniqueName}`;
 
-      // BUCKET İSMİ PANELİNİZLE UYUMLU OLARAK 'artworks-images' OLARak GÜNCELLENDİ
-      const { error: uploadError } = await supabase.storage
-        .from('artworks-images')
-        .upload(uploadedFilePath, compressedBlob, {
-          cacheControl: '3600',
-          upsert: false,
-          contentType: 'image/jpeg'
-        });
+      const uploadUrl = `${SUPABASE_URL}/storage/v1/object/artworks-images/${filePath}`;
+      
+      const response = await fetch(uploadUrl, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'image/jpeg',
+          'x-upsert': 'true'
+        },
+        body: compressedBlob
+      });
 
-      if (uploadError) throw new Error(`Resim yüklenemedi: ${uploadError.message}`);
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Resim yüklenemedi (${response.status}): ${errText}`);
+      }
 
       const { data: publicUrlData } = supabase.storage
         .from('artworks-images')
-        .getPublicUrl(uploadedFilePath);
+        .getPublicUrl(filePath);
 
       const imageUrl = publicUrlData?.publicUrl;
       if (!imageUrl) throw new Error('Resim URL adresi oluşturulamadı.');
@@ -270,9 +275,6 @@ export default function Home() {
         .insert([artworkData]);
 
       if (insertError) {
-        if (uploadedFilePath) {
-          await supabase.storage.from('artworks-images').remove([uploadedFilePath]);
-        }
         throw new Error(`Veritabanına kayıt hatası: ${insertError.message}`);
       }
 
@@ -594,7 +596,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* Güvenli Ödeme / Escrow ve Kart Doğrulama Modalı */}
+      {/* Güvenli Ödeme / Escrow Modalı */}
       {showPaymentModal && pendingArtData && (
         <div onClick={() => setShowPaymentModal(false)} style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1100, padding: '16px' }}>
           <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '460px', width: '100%', padding: '22px', maxHeight: '90vh', overflowY: 'auto' }}>
