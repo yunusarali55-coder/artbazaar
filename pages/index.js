@@ -80,8 +80,8 @@ export default function Home() {
 
       if (error || !data) return;
 
-      const formattedArtworks = data.map((art, index) => ({
-        id: art.id || `art-${Date.now()}-${index}`,
+      const formattedArtworks = data.map((art) => ({
+        id: art.id,
         title: art.title || 'Tarihi Eser',
         description: art.description || 'Açıklama yok',
         isOriginal: art.is_original || 'Orijinal',
@@ -162,7 +162,7 @@ export default function Home() {
 
     try {
       const compressedBlob = await compressImage(imageFile);
-      const uniqueName = `tarihi-${Date.now()}-${Math.random().toString(36.substring(2, 7))}.jpg`;
+      const uniqueName = `tarihi-${Date.now()}-${Math.random().toString(36).substring(2, 7)}.jpg`;
       const filePath = `uploads/${uniqueName}`;
 
       const uploadUrl = `${SUPABASE_URL}/storage/v1/object/artworks-images/${filePath}`;
@@ -187,7 +187,6 @@ export default function Home() {
 
       const imageUrl = publicUrlData?.publicUrl;
 
-      // Primary Key (id) çakışmasını önlemek için id alanını INSERT verisinden çıkarıyoruz (Veritabanı otomatik üretecektir)
       const artworkData = {
         title: title.trim(),
         description: description.trim() || 'Açıklama yok',
@@ -257,7 +256,7 @@ export default function Home() {
         setShowAuthModal(false);
         alert('✅ Kayıt başarılı ve oturum açıldı!');
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { data } = await supabase.auth.signInWithPassword({
           email: email.trim(),
           password: password
         });
@@ -549,7 +548,7 @@ export default function Home() {
 
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={confirmOrderWithEscrow} style={{ flex: 1, backgroundColor: '#4f46e5', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold', fontSize: '0.9rem', cursor: 'pointer' }}>Ödemeyi Tamamla</button>
-              <button onClick={() => setShowPaymentModal(false)} style={{ backgroundColor: '#e5e7eb', color: '#374151', border: 'none', padding: '10px 14px', borderRadius: '6px', fontWeight: 'bold', fontSize: '0.9rem', cursor: 'pointer' }}>İptal</button>
+              <button onClick={() => setShowPaymentModal(false)} style={{ backgroundColor: '#e5e7eb', color: '#374151', border: 'none', padding: '10px 14px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem' }}>İptal</button>
             </div>
           </div>
         </div>
@@ -583,7 +582,7 @@ export default function Home() {
                 </button>
               </div>
               
-              <button type="submit" disabled={authLoading} style={{ backgroundColor: authLoading ? '#9ca3af' : '#4f46e5', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem', marginTop: '4px' }}>
+              <button type="submit" disabled={authAuthLoading || authLoading} style={{ backgroundColor: authLoading ? '#9ca3af' : '#4f46e5', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem', marginTop: '4px' }}>
                 {authLoading ? 'İşleniyor...' : (authMode === 'login' ? 'Giriş Yap' : 'Kayıt Ol')}
               </button>
             </form>
