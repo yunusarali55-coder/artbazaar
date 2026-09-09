@@ -57,7 +57,31 @@ export default function Home() {
       phone: '05443433881',
       iban: 'TR41 0006 4000 0017 3003 4172 52',
       price: '3.500 ₺',
-      image: 'https://picsum.photos/seed/art1/1200/800',
+      image: 'https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?auto=format&fit=crop&w=1200&q=80',
+      status: 'Satışta'
+    },
+    {
+      id: 'demo-2',
+      title: 'Klasik Yağlı Boya Manzara Tablosu',
+      description: '1800ler sonu dönemine ait tuval üzerine yağlı boya sanat eseri.',
+      isOriginal: 'Orijinal',
+      artist: 'Ahmet Emin',
+      phone: '05332221100',
+      iban: 'TR41 0006 4000 0017 3003 4172 52',
+      price: '12.500 ₺',
+      image: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=1200&q=80',
+      status: 'Satışta'
+    },
+    {
+      id: 'demo-3',
+      title: 'Osmanlı Dönemi Pirinç Şamdan',
+      description: 'El işçiliği antika pirinç şamdan çifti, kusursuz kondisyonda.',
+      isOriginal: 'Orijinal',
+      artist: 'Koleksiyoner',
+      phone: '05554443322',
+      iban: 'TR41 0006 4000 0017 3003 4172 52',
+      price: '4.800 ₺',
+      image: 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=1200&q=80',
       status: 'Satışta'
     }
   ]);
@@ -106,7 +130,7 @@ export default function Home() {
             phone: art.phone || 'Belirtilmedi',
             iban: art.iban || 'Belirtilmedi',
             price: art.price ? `${art.price} ₺` : '1.000 ₺',
-            image: art.image_url || 'https://picsum.photos/seed/default/1200/800',
+            image: art.image_url || 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=1200&q=80',
             status: 'Satışta'
           }))
         : [];
@@ -122,7 +146,19 @@ export default function Home() {
           phone: '05443433881',
           iban: 'TR41 0006 4000 0017 3003 4172 52',
           price: '3.500 ₺',
-          image: 'https://picsum.photos/seed/art1/1200/800',
+          image: 'https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?auto=format&fit=crop&w=1200&q=80',
+          status: 'Satışta'
+        },
+        {
+          id: 'demo-2',
+          title: 'Klasik Yağlı Boya Manzara Tablosu',
+          description: '1800ler sonu dönemine ait tuval üzerine yağlı boya sanat eseri.',
+          isOriginal: 'Orijinal',
+          artist: 'Ahmet Emin',
+          phone: '05332221100',
+          iban: 'TR41 0006 4000 0017 3003 4172 52',
+          price: '12.500 ₺',
+          image: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=1200&q=80',
           status: 'Satışta'
         }
       ]);
