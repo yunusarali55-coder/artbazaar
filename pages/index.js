@@ -14,6 +14,7 @@ export default function Home() {
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -57,7 +58,7 @@ export default function Home() {
       phone: '05443433881',
       iban: 'TR41 0006 4000 0017 3003 4172 52',
       price: '4.500 ₺',
-      image: 'https://images.unsplash.com/photo-1577083552431-6e5fd01aa342?auto=format&fit=crop&w=1200&q=80',
+      image: 'https://images.unsplash.com/photo-1594897030264-ab7d87efc873?auto=format&fit=crop&w=1200&q=80',
       status: 'Satışta'
     },
     {
@@ -69,19 +70,19 @@ export default function Home() {
       phone: '05332221100',
       iban: 'TR41 0006 4000 0017 3003 4172 52',
       price: '6.200 ₺',
-      image: 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=1200&q=80',
+      image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=1200&q=80',
       status: 'Satışta'
     },
     {
       id: 'demo-3',
-      title: 'Klasik Tuval Yağlı Boya Tablo',
-      description: '19. yüzyıl sonu manzara temalı imzalı yağlı boya sanat eseri.',
+      title: '18. Yüzyıl Antika Ahşap Oyma Sehpa',
+      description: 'Geleneksel el oyması nadir koleksiyon parça.',
       isOriginal: 'Orijinal',
       artist: 'Sanat Galerisi',
       phone: '05554443322',
       iban: 'TR41 0006 4000 0017 3003 4172 52',
       price: '14.500 ₺',
-      image: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=1200&q=80',
+      image: 'https://images.unsplash.com/photo-1532372320572-cda25653a26d?auto=format&fit=crop&w=1200&q=80',
       status: 'Satışta'
     }
   ]);
@@ -89,14 +90,28 @@ export default function Home() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const savedUser = localStorage.getItem('efnan_user');
-    if (savedUser) {
-      try {
-        setCurrentUser(JSON.parse(savedUser));
-      } catch (error) {
-        localStorage.removeItem('efnan_user');
+    // Supabase Auth durumunu dinle
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setCurrentUser({
+          id: session.user.id,
+          username: session.user.user_metadata?.username || session.user.email.split('@')[0],
+          email: session.user.email
+        });
       }
-    }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setCurrentUser({
+          id: session.user.id,
+          username: session.user.user_metadata?.username || session.user.email.split('@')[0],
+          email: session.user.email
+        });
+      } else {
+        setCurrentUser(null);
+      }
+    });
 
     const savedOrders = localStorage.getItem('efnan_orders');
     if (savedOrders) {
@@ -109,6 +124,10 @@ export default function Home() {
     }
 
     fetchArtworksFromSupabase();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const fetchArtworksFromSupabase = async () => {
@@ -133,7 +152,7 @@ export default function Home() {
             phone: art.phone || 'Belirtilmedi',
             iban: art.iban || 'Belirtilmedi',
             price: art.price ? `${art.price} ₺` : '1.000 ₺',
-            image: art.image_url || 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=1200&q=80',
+            image: art.image_url || 'https://images.unsplash.com/photo-1594897030264-ab7d87efc873?auto=format&fit=crop&w=1200&q=80',
             status: 'Satışta'
           }))
         : [];
@@ -149,7 +168,7 @@ export default function Home() {
           phone: '05443433881',
           iban: 'TR41 0006 4000 0017 3003 4172 52',
           price: '4.500 ₺',
-          image: 'https://images.unsplash.com/photo-1577083552431-6e5fd01aa342?auto=format&fit=crop&w=1200&q=80',
+          image: 'https://images.unsplash.com/photo-1594897030264-ab7d87efc873?auto=format&fit=crop&w=1200&q=80',
           status: 'Satışta'
         },
         {
@@ -161,19 +180,19 @@ export default function Home() {
           phone: '05332221100',
           iban: 'TR41 0006 4000 0017 3003 4172 52',
           price: '6.200 ₺',
-          image: 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=1200&q=80',
+          image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=1200&q=80',
           status: 'Satışta'
         },
         {
           id: 'demo-3',
-          title: 'Klasik Tuval Yağlı Boya Tablo',
-          description: '19. yüzyıl sonu manzara temalı imzalı yağlı boya sanat eseri.',
+          title: '18. Yüzyıl Antika Ahşap Oyma Sehpa',
+          description: 'Geleneksel el oyması nadir koleksiyon parça.',
           isOriginal: 'Orijinal',
           artist: 'Sanat Galerisi',
           phone: '05554443322',
           iban: 'TR41 0006 4000 0017 3003 4172 52',
           price: '14.500 ₺',
-          image: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=1200&q=80',
+          image: 'https://images.unsplash.com/photo-1532372320572-cda25653a26d?auto=format&fit=crop&w=1200&q=80',
           status: 'Satışta'
         }
       ]);
@@ -303,6 +322,7 @@ export default function Home() {
       const imageUrl = publicUrlData?.publicUrl;
       if (!imageUrl) throw new Error('Resim URL adresi oluşturulamadı.');
 
+      // PKEY çakışmasını önlemek için id alanını INSERT nesnesinden siliyoruz (Supabase otomatik üretir)
       const artworkData = {
         title: title.trim(),
         description: description.trim() || 'Açıklama yok',
@@ -332,7 +352,7 @@ export default function Home() {
     }
   };
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     if (!email.trim() || !password || !username.trim()) {
       alert('❌ Lütfen tüm alanları doldurun.');
@@ -342,36 +362,76 @@ export default function Home() {
       alert('❌ Şifre en az 6 karakter olmalıdır.');
       return;
     }
-    const newUser = { username: username.trim(), email: email.trim().toLowerCase() };
-    localStorage.setItem('efnan_user', JSON.stringify(newUser));
-    setCurrentUser(newUser);
-    setShowAuthModal(false);
-    setEmail('');
-    setPassword('');
-    setUsername('');
-    alert('✅ Kayıt başarılı!');
+
+    setAuthLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password: password,
+        options: {
+          data: { username: username.trim() }
+        }
+      });
+
+      if (error) throw error;
+
+      alert('✅ Kayıt başarılı! Lütfen giriş yapın veya oturumunuz açıldıysa devam edin.');
+      if (data?.session) {
+        setCurrentUser({
+          id: data.user.id,
+          username: username.trim(),
+          email: email.trim()
+        });
+        setShowAuthModal(false);
+      } else {
+        setAuthMode('login');
+      }
+    } catch (error) {
+      alert('❌ Kayıt olurken hata oluştu: ' + error.message);
+    } finally {
+      setAuthLoading(false);
+    }
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     if (!email.trim() || !password) {
       alert('❌ Lütfen e-posta ve şifrenizi girin.');
       return;
     }
-    const existingUser = {
-      username: email.trim().toLowerCase().split('@')[0],
-      email: email.trim().toLowerCase()
-    };
-    localStorage.setItem('efnan_user', JSON.stringify(existingUser));
-    setCurrentUser(existingUser);
-    setShowAuthModal(false);
-    setEmail('');
-    setPassword('');
-    alert('✅ Giriş yapıldı!');
+
+    setAuthLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password
+      });
+
+      if (error) {
+        throw new Error('E-posta veya şifre hatalı!');
+      }
+
+      if (data?.user) {
+        const uname = data.user.user_metadata?.username || email.trim().split('@')[0];
+        setCurrentUser({
+          id: data.user.id,
+          username: uname,
+          email: data.user.email
+        });
+        setShowAuthModal(false);
+        setEmail('');
+        setPassword('');
+        alert('✅ Giriş başarılı!');
+      }
+    } catch (error) {
+      alert('❌ Giriş başarısız: ' + error.message);
+    } finally {
+      setAuthLoading(false);
+    }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('efnan_user');
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     setCurrentUser(null);
     alert('Çıkış yapıldı.');
   };
@@ -692,8 +752,8 @@ export default function Home() {
               <input type="email" placeholder="E-posta Adresi" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
               <input type="password" placeholder="Şifre (En az 6 karakter)" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
               
-              <button type="submit" style={{ backgroundColor: '#4f46e5', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', marginTop: '4px' }}>
-                {authMode === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}
+              <button type="submit" disabled={authLoading} style={{ backgroundColor: authLoading ? '#9ca3af' : '#4f46e5', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold', cursor: authLoading ? 'not-allowed' : 'pointer', marginTop: '4px' }}>
+                {authLoading ? 'İşleniyor...' : (authMode === 'login' ? 'Giriş Yap' : 'Kayıt Ol')}
               </button>
             </form>
 
