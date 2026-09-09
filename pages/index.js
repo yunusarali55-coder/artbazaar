@@ -17,7 +17,6 @@ export default function Home() {
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [historyInfo, setHistoryInfo] = useState('');
   const [isOriginal, setIsOriginal] = useState('Orijinal');
   const [price, setPrice] = useState('');
   const [phone, setPhone] = useState('');
@@ -53,7 +52,6 @@ export default function Home() {
       id: 'demo-1',
       title: 'Antika Bakır İşleme Tepsi',
       description: '19. yüzyıl Osmanlı dönemi el dövme bakır tepsi.',
-      historyInfo: 'Osmanlı’nın son dönemi Anadolu zanaatkarlığının nadide bir örneğidir.',
       isOriginal: 'Orijinal',
       artist: 'Yunus Aralı',
       phone: '05443433881',
@@ -103,7 +101,6 @@ export default function Home() {
             id: art.id,
             title: art.title || 'İsimsiz Eser',
             description: art.description || 'Açıklama yok',
-            historyInfo: art.history_info || 'Bilgi belirtilmemiş',
             isOriginal: art.is_original || 'Orijinal',
             artist: art.artist || 'Anonim',
             phone: art.phone || 'Belirtilmedi',
@@ -120,7 +117,6 @@ export default function Home() {
           id: 'demo-1',
           title: 'Antika Bakır İşleme Tepsi',
           description: '19. yüzyıl Osmanlı dönemi el dövme bakır tepsi.',
-          historyInfo: 'Osmanlı’nın son dönemi Anadolu zanaatkarlığının nadide bir örneğidir.',
           isOriginal: 'Orijinal',
           artist: 'Yunus Aralı',
           phone: '05443433881',
@@ -203,7 +199,6 @@ export default function Home() {
   const resetListingForm = () => {
     setTitle('');
     setDescription('');
-    setHistoryInfo('');
     setIsOriginal('Orijinal');
     setPrice('');
     setPhone('');
@@ -260,7 +255,6 @@ export default function Home() {
       const artworkData = {
         title: title.trim(),
         description: description.trim() || 'Açıklama yok',
-        history_info: historyInfo.trim() || 'Belirtilmemiş',
         is_original: isOriginal,
         price: parseFloat(price) || 0,
         image_url: imageUrl,
@@ -497,45 +491,35 @@ export default function Home() {
                   </div>
                   <div style={{ flex: 1 }}>
                     <label style={{ fontSize: '0.75rem', color: '#4b5563', display: 'block', marginBottom: '4px' }}>Fiyat (₺):</label>
-                    <input type="number" placeholder="Örn: 8400" value={price} onChange={(e) => setPrice(e.target.value)} required style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
+                    <input type="number" placeholder="Örn: 3500" value={price} onChange={(e) => setPrice(e.target.value)} required style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
                   </div>
                 </div>
 
-                <textarea placeholder="Eserin Tarihçesi / Sanatsal Bilgileri" value={historyInfo} onChange={(e) => setHistoryInfo(e.target.value)} rows="3" style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
-                <textarea placeholder="Detaylı Açıklama / Kondisyon Durumu" value={description} onChange={(e) => setDescription(e.target.value)} rows="3" style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
+                <textarea placeholder="Eser Açıklaması ve Detayları" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
 
                 <div style={{ display: 'flex', gap: '10px' }}>
-                  <input type="text" placeholder="İletişim Telefonu (Örn: 0544...)" value={phone} onChange={(e) => setPhone(e.target.value)} required style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
-                  <input type="text" placeholder="Ödeme Alacağınız IBAN" value={iban} onChange={(e) => setIban(e.target.value)} required style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
+                  <input type="text" placeholder="İletişim Telefonu" value={phone} onChange={(e) => setPhone(e.target.value)} required style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
+                  <input type="text" placeholder="Ödeme Alınacak IBAN" value={iban} onChange={(e) => setIban(e.target.value)} required style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
                 </div>
 
                 <div style={{ border: '2px dashed #d1d5db', padding: '16px', borderRadius: '8px', textAlign: 'center', backgroundColor: '#f9fafb' }}>
                   {imagePreview ? (
                     <div>
-                      <img src={imagePreview} alt="Önizleme" style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '6px', marginBottom: '10px' }} />
+                      <img src={imagePreview} alt="Önizleme" style={{ maxWidth: '100%', height: '140px', objectFit: 'cover', borderRadius: '6px', marginBottom: '8px' }} />
                       <div>
-                        <button type="button" onClick={resetImageSelection} style={{ backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}>Resmi Değiştir / Kaldır</button>
+                        <button type="button" onClick={resetImageSelection} style={{ backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem' }}>Resmi Değiştir / Kaldır</button>
                       </div>
                     </div>
                   ) : (
                     <div>
-                      <p style={{ fontSize: '0.85rem', color: '#4b5563', marginBottom: '10px' }}>Eserin fotoğrafını yükleyin (Kamera veya Galeri)</p>
-                      <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                        <label style={{ backgroundColor: '#4f46e5', color: 'white', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}>
-                          📷 Kamera ile Çek
-                          <input id="camera-image-input" type="file" accept="image/*" capture="environment" onChange={(e) => handleImageSelect(e.target.files[0])} style={{ display: 'none' }} />
-                        </label>
-                        <label style={{ backgroundColor: '#0284c7', color: 'white', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}>
-                          🖼️ Galeriden Seç
-                          <input id="gallery-image-input" type="file" accept="image/*" onChange={(e) => handleImageSelect(e.target.files[0])} style={{ display: 'none' }} />
-                        </label>
-                      </div>
+                      <p style={{ fontSize: '0.85rem', color: '#4b5563', marginBottom: '8px' }}>Eser Fotoğrafı Yükle</p>
+                      <input id="gallery-image-input" type="file" accept="image/*" onChange={(e) => handleImageSelect(e.target.files[0])} style={{ fontSize: '0.85rem' }} />
                     </div>
                   )}
                 </div>
 
-                <button type="submit" disabled={uploading} style={{ backgroundColor: uploading ? '#9ca3af' : '#10b981', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: uploading ? 'not-allowed' : 'pointer', fontSize: '1rem' }}>
-                  {uploading ? 'Yükleniyor ve Kaydediliyor...' : 'Vitrine Ekle'}
+                <button type="submit" disabled={uploading} style={{ backgroundColor: uploading ? '#9ca3af' : '#10b981', color: 'white', border: 'none', padding: '12px', borderRadius: '6px', fontWeight: 'bold', fontSize: '1rem', cursor: uploading ? 'not-allowed' : 'pointer' }}>
+                  {uploading ? 'Yükleniyor ve Kaydediliyor...' : 'Eseri Vitrine Ekle'}
                 </button>
               </form>
             </section>
@@ -543,31 +527,28 @@ export default function Home() {
         )}
 
         {activeTab === 'my_orders' && (
-          <section>
-            <h2 style={{ fontSize: '1.3rem', marginBottom: '14px', color: '#111827' }}>Siparişlerim ve Güvenli Havuz İşlemleri</h2>
+          <section style={{ maxWidth: '800px', margin: '0 auto', backgroundColor: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+            <h2 style={{ fontSize: '1.2rem', marginBottom: '16px', color: '#111827' }}>Siparişlerim ve Güvenli Havuz İşlemleri</h2>
             {orders.length === 0 ? (
-              <p style={{ color: '#6b7280' }}>Henüz aktif bir siparişiniz bulunmuyor.</p>
+              <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>Henüz oluşturulmuş bir siparişiniz bulunmuyor.</p>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {orders.map((order) => (
-                  <div key={order.id} style={{ backgroundColor: 'white', padding: '16px', borderRadius: '10px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb' }}>
-                    <h3 style={{ fontSize: '1.05rem', fontWeight: 'bold' }}>{order.artTitle}</h3>
-                    <p style={{ fontSize: '0.85rem', color: '#4b5563' }}>Satıcı: {order.artist} | Fiyat: <b>{order.price}</b></p>
-                    <p style={{ fontSize: '0.85rem', color: '#4b5563' }}>Ödeme Yöntemi: {order.paymentMethod}</p>
-                    <p style={{ fontSize: '0.85rem', color: '#4b5563' }}>Havuz IBAN: <code>{order.escrowIbanUsed}</code></p>
-                    <div style={{ margin: '10px 0', padding: '8px', backgroundColor: '#f3f4f6', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 'bold', color: '#1f2937' }}>
-                      Durum: {order.statusText}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {orders.map((ord) => (
+                  <div key={ord.id} style={{ border: '1px solid #e5e7eb', padding: '16px', borderRadius: '8px', backgroundColor: '#f9fafb' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <h4 style={{ fontWeight: 'bold', fontSize: '1rem' }}>{ord.artTitle}</h4>
+                      <span style={{ fontWeight: 'bold', color: '#059669' }}>{ord.price}</span>
                     </div>
-                    <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
-                      {order.status === 'pending_payment' && (
-                        <button onClick={() => completePaymentForOrder(order.id)} style={{ backgroundColor: '#2563eb', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}>
-                          Ödemeyi Yaptım / Onayla
-                        </button>
+                    <p style={{ fontSize: '0.85rem', color: '#4b5563', marginBottom: '4px' }}>Satıcı: {ord.artist} | Tel: {ord.phone}</p>
+                    <p style={{ fontSize: '0.85rem', color: '#4b5563', marginBottom: '8px' }}>Ödeme Yöntemi: {ord.paymentMethod}</p>
+                    <p style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#d97706', marginBottom: '12px' }}>Durum: {ord.statusText}</p>
+
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {ord.status === 'pending_payment' && (
+                        <button onClick={() => completePaymentForOrder(ord.id)} style={{ backgroundColor: '#2563eb', color: 'white', border: 'none', padding: '8px 14px', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>Ödemeyi Onayla & Havuza Aktar</button>
                       )}
-                      {order.status === 'shipping_expected' && (
-                        <button onClick={() => confirmDelivery(order.id)} style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}>
-                          Ürünü Teslim Aldım (Satıcıya Ödeme Aktarılsın)
-                        </button>
+                      {ord.status === 'shipping_expected' && (
+                        <button onClick={() => confirmDelivery(ord.id)} style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '8px 14px', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>Ürünü Teslim Aldım (Satıcıya Ödeme Çöz)</button>
                       )}
                     </div>
                   </div>
@@ -578,112 +559,91 @@ export default function Home() {
         )}
       </main>
 
-      {/* DETAY & SATIN ALMA MODALI */}
       {selectedArt && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100, padding: '12px' }}>
-          <div style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '550px', width: '100%', maxHeight: '90vh', overflowY: 'auto', padding: '20px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
-            <img src={selectedArt.image} alt={selectedArt.title} style={{ width: '100%', height: '240px', objectFit: 'cover', borderRadius: '8px' }} />
-            <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', marginTop: '12px' }}>{selectedArt.title}</h2>
-            <p style={{ fontSize: '0.85rem', color: '#6b7280', margin: '4px 0' }}>Sanatçı / Satıcı: {selectedArt.artist}</p>
-            <p style={{ fontSize: '0.85rem', color: '#6b7280', margin: '4px 0' }}>Telefon: {selectedArt.phone}</p>
-            <div style={{ margin: '10px 0', padding: '10px', backgroundColor: '#f9fafb', borderRadius: '6px' }}>
-              <p style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#374151' }}>Tarihçe / Bilgi:</p>
-              <p style={{ fontSize: '0.8rem', color: '#4b5563' }}>{selectedArt.historyInfo}</p>
-            </div>
-            <div style={{ margin: '10px 0', padding: '10px', backgroundColor: '#f9fafb', borderRadius: '6px' }}>
-              <p style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#374151' }}>Açıklama:</p>
-              <p style={{ fontSize: '0.8rem', color: '#4b5563' }}>{selectedArt.description}</p>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
-              <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#059669' }}>{selectedArt.price}</span>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button onClick={() => setSelectedArt(null)} style={{ backgroundColor: '#e5e7eb', color: '#374151', border: 'none', padding: '8px 14px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>Kapat</button>
-                <button onClick={() => { const art = selectedArt; setSelectedArt(null); triggerBuyProcess(art); }} style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '8px 14px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>Güvenli Satın Al</button>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px', zIndex: 50 }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '500px', width: '100%', overflow: 'hidden', boxShadow: '0 10px 15px rgba(0,0,0,0.2)' }}>
+            <img src={selectedArt.image} alt={selectedArt.title} style={{ width: '100%', height: '240px', objectFit: 'cover' }} />
+            <div style={{ padding: '20px' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '8px' }}>{selectedArt.title}</h3>
+              <p style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '4px' }}>Sanatçı / Satıcı: {selectedArt.artist}</p>
+              <p style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '12px' }}>Açıklama: {selectedArt.description}</p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <span style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#059669' }}>{selectedArt.price}</span>
+                <span style={{ fontSize: '0.8rem', backgroundColor: '#d1fae5', color: '#065f46', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold' }}>{selectedArt.isOriginal}</span>
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button onClick={() => { setSelectedArt(null); triggerBuyProcess(selectedArt); }} style={{ flex: 1, backgroundColor: '#10b981', color: 'white', border: 'none', padding: '12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>Güvenli Satın Al</button>
+                <button onClick={() => setSelectedArt(null)} style={{ backgroundColor: '#e5e7eb', color: '#374151', border: 'none', padding: '12px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>Kapat</button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* ÖDEME / ESCROW MODALI */}
       {showPaymentModal && pendingArtData && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100, padding: '12px' }}>
-          <div style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '500px', width: '100%', maxHeight: '90vh', overflowY: 'auto', padding: '20px' }}>
-            <h2 style={{ fontSize: '1.15rem', fontWeight: 'bold', marginBottom: '8px' }}>🔒 Güvenli Havuz (Escrow) ile Ödeme</h2>
-            <p style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: '14px' }}>Ödemeniz siz ürünü teslim alıp onaylayana kadar güvenli havuz hesabımızda tutulur.</p>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px', zIndex: 60 }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '450px', width: '100%', padding: '24px', boxShadow: '0 10px 15px rgba(0,0,0,0.2)' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '12px' }}>Güvenli Ödeme / Havuz Sistemi</h3>
+            <p style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '16px' }}>Ödemeniz siz ürünü teslim alıp onaylayana kadar güvenli havuz hesabında tutulur.</p>
 
-            <div style={{ marginBottom: '12px' }}>
-              <label style={{ fontSize: '0.8rem', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>Para Birimi Seçimi:</label>
-              <select value={selectedCurrency} onChange={(e) => setSelectedCurrency(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: 'white' }}>
-                <option value="TL">Türk Lirası (TL)</option>
-                <option value="USD">Amerikan Doları (USD)</option>
-              </select>
-            </div>
-
-            <div style={{ marginBottom: '12px' }}>
-              <label style={{ fontSize: '0.8rem', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>Ödeme Yöntemi:</label>
-              <select value={paymentMethodType} onChange={(e) => setPaymentMethodType(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: 'white' }}>
-                <option value="havale">Güvenli Havale / EFT ({escrowAccounts.bankName})</option>
-                <option value="kart">Kredi / Banka Kartı</option>
-              </select>
-            </div>
-
-            {paymentMethodType === 'havale' ? (
-              <div style={{ backgroundColor: '#f9fafb', padding: '12px', borderRadius: '6px', marginBottom: '14px', fontSize: '0.82rem' }}>
-                <p><b>Alıcı:</b> {escrowAccounts.accountHolder}</p>
-                <p><b>Banka:</b> {escrowAccounts.bankName}</p>
-                <p><b>IBAN ({selectedCurrency}):</b> <code>{selectedCurrency === 'TL' ? escrowAccounts.tlIban : escrowAccounts.usdIban}</code></p>
-                <p style={{ color: '#d97706', marginTop: '6px' }}>⚠️ Açıklama kısmına sipariş numaranızı yazmayı unutmayın.</p>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '0.8rem', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Ödeme Yöntemi:</label>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button type="button" onClick={() => setPaymentMethodType('havale')} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: paymentMethodType === 'havale' ? '2px solid #4f46e5' : '1px solid #d1d5db', backgroundColor: paymentMethodType === 'havale' ? '#eef2ff' : 'white', fontWeight: 'bold', cursor: 'pointer' }}>Güvenli Havale</button>
+                <button type="button" onClick={() => setPaymentMethodType('kart')} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: paymentMethodType === 'kart' ? '2px solid #4f46e5' : '1px solid #d1d5db', backgroundColor: paymentMethodType === 'kart' ? '#eef2ff' : 'white', fontWeight: 'bold', cursor: 'pointer' }}>Kredi Kartı</button>
               </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
-                <input type="text" placeholder="Kart Üzerindeki Ad Soyad" value={cardHolder} onChange={(e) => setCardHolder(e.target.value)} style={{ padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
-                <input type="text" placeholder="Kart Numarası (16 hane)" value={cardNumber} onChange={(e) => setCardNumber(e.target.value)} maxLength={19} style={{ padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <input type="text" placeholder="AA/YY" value={cardExpiry} onChange={(e) => setCardExpiry(e.target.value)} maxLength={5} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
-                  <input type="text" placeholder="CVV" value={cardCvv} onChange={(e) => setCardCvv(e.target.value)} maxLength={3} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
+            </div>
+
+            {paymentMethodType === 'kart' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
+                <input type="text" placeholder="Kart Üzerindeki İsim Soyisim" value={cardHolder} onChange={(e) => setCardHolder(e.target.value)} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
+                <input type="text" placeholder="Kart Numarası (16 Hane)" maxLength={16} value={cardNumber} onChange={(e) => setCardNumber(e.target.value)} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <input type="text" placeholder="AA/YY" maxLength={5} value={cardExpiry} onChange={(e) => setCardExpiry(e.target.value)} style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
+                  <input type="text" placeholder="CVV" maxLength={3} value={cardCvv} onChange={(e) => setCardCvv(e.target.value)} style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
                 </div>
               </div>
             )}
 
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-              <button onClick={() => setShowPaymentModal(false)} style={{ backgroundColor: '#e5e7eb', color: '#374151', border: 'none', padding: '8px 14px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>İptal</button>
-              <button onClick={confirmOrderWithEscrow} style={{ backgroundColor: '#4f46e5', color: 'white', border: 'none', padding: '8px 14px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>Siparişi Tamamla</button>
+            {paymentMethodType === 'havale' && (
+              <div style={{ backgroundColor: '#f9fafb', padding: '12px', borderRadius: '8px', border: '1px solid #e5e7eb', marginBottom: '16px', fontSize: '0.85rem' }}>
+                <p style={{ fontWeight: 'bold', marginBottom: '4px' }}>Havuz IBAN ({escrowAccounts.bankName}):</p>
+                <p style={{ fontFamily: 'monospace', color: '#1f2937' }}>{escrowAccounts.tlIban}</p>
+                <p style={{ color: '#6b7280', fontSize: '0.75rem', marginTop: '4px' }}>Alıcı: {escrowAccounts.accountHolder}</p>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button onClick={confirmOrderWithEscrow} style={{ flex: 1, backgroundColor: '#4f46e5', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>Siparişi Tamamla</button>
+              <button onClick={() => setShowPaymentModal(false)} style={{ backgroundColor: '#e5e7eb', color: '#374151', border: 'none', padding: '10px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>İptal</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* GİRİŞ / KAYIT MODALI */}
       {showAuthModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100, padding: '12px' }}>
-          <div style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '400px', width: '100%', padding: '20px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
-            <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '12px', textAlign: 'center' }}>
-              {authMode === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}
-            </h2>
-            <form onSubmit={authMode === 'login' ? handleLogin : handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px', zIndex: 60 }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '380px', width: '100%', padding: '24px', boxShadow: '0 10px 15px rgba(0,0,0,0.2)' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '16px', textAlign: 'center' }}>{authMode === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}</h3>
+            <form onSubmit={authMode === 'login' ? handleLogin : handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {authMode === 'register' && (
                 <input type="text" placeholder="Kullanıcı Adı" value={username} onChange={(e) => setUsername(e.target.value)} required style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
               )}
               <input type="email" placeholder="E-posta Adresi" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
               <input type="password" placeholder="Şifre (En az 6 karakter)" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
               
-              <button type="submit" style={{ backgroundColor: '#4f46e5', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', marginTop: '6px' }}>
+              <button type="submit" style={{ backgroundColor: '#4f46e5', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', marginTop: '4px' }}>
                 {authMode === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}
               </button>
             </form>
 
-            <div style={{ textAlign: 'center', marginTop: '12px' }}>
-              {authMode === 'login' ? (
-                <p style={{ fontSize: '0.8rem', color: '#6b7280' }}>
-                  Hesabınız yok mu? <span onClick={() => setAuthMode('register')} style={{ color: '#4f46e5', cursor: 'pointer', fontWeight: 'bold' }}>Kayıt Olun</span>
-                </p>
-              ) : (
-                <p style={{ fontSize: '0.8rem', color: '#6b7280' }}>
-                  Zaten hesabınız var mı? <span onClick={() => setAuthMode('login')} style={{ color: '#4f46e5', cursor: 'pointer', fontWeight: 'bold' }}>Giriş Yapın</span>
-                </p>
-              )}
-              <button onClick={() => setShowAuthModal(false)} style={{ backgroundColor: 'transparent', border: 'none', color: '#9ca3af', fontSize: '0.75rem', cursor: 'pointer', marginTop: '8px' }}>Pencereyi Kapat</button>
+            <div style={{ textAlign: 'center', marginTop: '14px' }}>
+              <button onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')} style={{ background: 'none', border: 'none', color: '#4f46e5', fontSize: '0.85rem', cursor: 'pointer', textDecoration: 'underline' }}>
+                {authMode === 'login' ? 'Hesabınız yok mu? Kayıt olun' : 'Zaten hesabınız var mı? Giriş yapın'}
+              </button>
+              <div style={{ marginTop: '8px' }}>
+                <button onClick={() => setShowAuthModal(false)} style={{ background: 'none', border: 'none', color: '#6b7280', fontSize: '0.8rem', cursor: 'pointer' }}>Kapat</button>
+              </div>
             </div>
           </div>
         </div>
