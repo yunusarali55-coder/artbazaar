@@ -50,38 +50,38 @@ export default function Home() {
   const [listings, setListings] = useState([
     {
       id: 'demo-1',
-      title: 'Antika Bakır İşleme Tepsi',
-      description: '19. yüzyıl Osmanlı dönemi el dövme bakır tepsi.',
+      title: 'Osmanlı El Dövme Bakır İbrik',
+      description: '19. yüzyıl el işçiliği kabartma motifli antika bakır ibrik.',
       isOriginal: 'Orijinal',
-      artist: 'Yunus Aralı',
+      artist: 'Koleksiyoner Yunus',
       phone: '05443433881',
       iban: 'TR41 0006 4000 0017 3003 4172 52',
-      price: '3.500 ₺',
-      image: 'https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?auto=format&fit=crop&w=1200&q=80',
+      price: '4.500 ₺',
+      image: 'https://images.unsplash.com/photo-1577083552431-6e5fd01aa342?auto=format&fit=crop&w=1200&q=80',
       status: 'Satışta'
     },
     {
       id: 'demo-2',
-      title: 'Klasik Yağlı Boya Manzara Tablosu',
-      description: '1800ler sonu dönemine ait tuval üzerine yağlı boya sanat eseri.',
+      title: 'Antika Pirinç Mumluk Şamdan Çifti',
+      description: 'Fransız dönemi ağır pirinç döküm orijinal antika şamdan seti.',
       isOriginal: 'Orijinal',
-      artist: 'Ahmet Emin',
+      artist: 'Ahmet Antika',
       phone: '05332221100',
       iban: 'TR41 0006 4000 0017 3003 4172 52',
-      price: '12.500 ₺',
-      image: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=1200&q=80',
+      price: '6.200 ₺',
+      image: 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=1200&q=80',
       status: 'Satışta'
     },
     {
       id: 'demo-3',
-      title: 'Osmanlı Dönemi Pirinç Şamdan',
-      description: 'El işçiliği antika pirinç şamdan çifti, kusursuz kondisyonda.',
+      title: 'Klasik Tuval Yağlı Boya Tablo',
+      description: '19. yüzyıl sonu manzara temalı imzalı yağlı boya sanat eseri.',
       isOriginal: 'Orijinal',
-      artist: 'Koleksiyoner',
+      artist: 'Sanat Galerisi',
       phone: '05554443322',
       iban: 'TR41 0006 4000 0017 3003 4172 52',
-      price: '4.800 ₺',
-      image: 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=1200&q=80',
+      price: '14.500 ₺',
+      image: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=1200&q=80',
       status: 'Satışta'
     }
   ]);
@@ -118,7 +118,10 @@ export default function Home() {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) return;
+      if (error) {
+        console.error('Supabase veri çekme hatası:', error.message);
+        return;
+      }
 
       const formattedArtworks = Array.isArray(data)
         ? data.map((art) => ({
@@ -139,31 +142,43 @@ export default function Home() {
         ...formattedArtworks,
         {
           id: 'demo-1',
-          title: 'Antika Bakır İşleme Tepsi',
-          description: '19. yüzyıl Osmanlı dönemi el dövme bakır tepsi.',
+          title: 'Osmanlı El Dövme Bakır İbrik',
+          description: '19. yüzyıl el işçiliği kabartma motifli antika bakır ibrik.',
           isOriginal: 'Orijinal',
-          artist: 'Yunus Aralı',
+          artist: 'Koleksiyoner Yunus',
           phone: '05443433881',
           iban: 'TR41 0006 4000 0017 3003 4172 52',
-          price: '3.500 ₺',
-          image: 'https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?auto=format&fit=crop&w=1200&q=80',
+          price: '4.500 ₺',
+          image: 'https://images.unsplash.com/photo-1577083552431-6e5fd01aa342?auto=format&fit=crop&w=1200&q=80',
           status: 'Satışta'
         },
         {
           id: 'demo-2',
-          title: 'Klasik Yağlı Boya Manzara Tablosu',
-          description: '1800ler sonu dönemine ait tuval üzerine yağlı boya sanat eseri.',
+          title: 'Antika Pirinç Mumluk Şamdan Çifti',
+          description: 'Fransız dönemi ağır pirinç döküm orijinal antika şamdan seti.',
           isOriginal: 'Orijinal',
-          artist: 'Ahmet Emin',
+          artist: 'Ahmet Antika',
           phone: '05332221100',
           iban: 'TR41 0006 4000 0017 3003 4172 52',
-          price: '12.500 ₺',
+          price: '6.200 ₺',
+          image: 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=1200&q=80',
+          status: 'Satışta'
+        },
+        {
+          id: 'demo-3',
+          title: 'Klasik Tuval Yağlı Boya Tablo',
+          description: '19. yüzyıl sonu manzara temalı imzalı yağlı boya sanat eseri.',
+          isOriginal: 'Orijinal',
+          artist: 'Sanat Galerisi',
+          phone: '05554443322',
+          iban: 'TR41 0006 4000 0017 3003 4172 52',
+          price: '14.500 ₺',
           image: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=1200&q=80',
           status: 'Satışta'
         }
       ]);
     } catch (error) {
-      console.error(error);
+      console.error('Beklenmeyen hata:', error);
     }
   };
 
@@ -467,7 +482,7 @@ export default function Home() {
       </Head>
 
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', position: 'sticky', top: 0, zIndex: 10 }}>
-        <div onClick={() => setActiveTab('explore')} style={{ cursor: 'pointer', fontWeight: '900', fontSize: '1.1rem', color: '#1f2937' }}>
+        <div onClick={() => window.location.reload()} style={{ cursor: 'pointer', fontWeight: '900', fontSize: '1.1rem', color: '#1f2937' }}>
           🏛️ Efnan ArtBazaar
         </div>
         <div>
@@ -547,9 +562,18 @@ export default function Home() {
                       </div>
                     </div>
                   ) : (
-                    <div>
-                      <p style={{ fontSize: '0.85rem', color: '#4b5563', marginBottom: '8px' }}>Eser Fotoğrafı Yükle</p>
-                      <input id="gallery-image-input" type="file" accept="image/*" onChange={(e) => handleImageSelect(e.target.files[0])} style={{ fontSize: '0.85rem' }} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <p style={{ fontSize: '0.85rem', color: '#4b5563', margin: 0 }}>Eser Fotoğrafı Ekle</p>
+                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                        <label style={{ backgroundColor: '#4f46e5', color: 'white', padding: '8px 12px', borderRadius: '6px', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}>
+                          📸 Kameradan Çek
+                          <input id="camera-image-input" type="file" accept="image/*" capture="environment" onChange={(e) => handleImageSelect(e.target.files[0])} style={{ display: 'none' }} />
+                        </label>
+                        <label style={{ backgroundColor: '#059669', color: 'white', padding: '8px 12px', borderRadius: '6px', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}>
+                          📁 Galeriden Seç
+                          <input id="gallery-image-input" type="file" accept="image/*" onChange={(e) => handleImageSelect(e.target.files[0])} style={{ display: 'none' }} />
+                        </label>
+                      </div>
                     </div>
                   )}
                 </div>
