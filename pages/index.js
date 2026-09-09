@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import { createClient } from '@supabase/supabase-js';
 
@@ -27,6 +27,9 @@ export default function Home() {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [uploading, setUploading] = useState(false);
+
+  const cameraInputRef = useRef(null);
+  const galleryInputRef = useRef(null);
 
   const [selectedArt, setSelectedArt] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -455,8 +458,45 @@ export default function Home() {
                     </div>
                   ) : (
                     <div>
-                      <p style={{ fontSize: '0.85rem', color: '#4b5563', marginBottom: '8px' }}>Eserin Fotoğrafını Çek veya Seç</p>
-                      <input type="file" accept="image/*" capture="environment" onChange={(e) => handleImageSelect(e.target.files[0])} style={{ fontSize: '0.8rem' }} />
+                      <p style={{ fontSize: '0.85rem', color: '#4b5563', marginBottom: '10px' }}>Eser Fotoğrafı Ekle</p>
+                      
+                      {/* Gizli Kamera Input */}
+                      <input 
+                        type="file" 
+                        ref={cameraInputRef}
+                        accept="image/*" 
+                        capture="environment" 
+                        onChange={(e) => handleImageSelect(e.target.files[0])} 
+                        style={{ display: 'none' }} 
+                      />
+
+                      {/* Gizli Dosya/Galeri Seçim Input */}
+                      <input 
+                        type="file" 
+                        ref={galleryInputRef}
+                        accept="image/*" 
+                        onChange={(e) => handleImageSelect(e.target.files[0])} 
+                        style={{ display: 'none' }} 
+                      />
+
+                      {/* Tercih Butonları Yan Yana */}
+                      <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                        <button 
+                          type="button" 
+                          onClick={() => cameraInputRef.current && cameraInputRef.current.click()} 
+                          style={{ backgroundColor: '#4f46e5', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '6px', fontWeight: 'bold', fontSize: '0.85rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
+                        >
+                          📷 Kameradan Çek
+                        </button>
+
+                        <button 
+                          type="button" 
+                          onClick={() => galleryInputRef.current && galleryInputRef.current.click()} 
+                          style={{ backgroundColor: '#059669', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '6px', fontWeight: 'bold', fontSize: '0.85rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
+                        >
+                          🖼️ Galeriden Seç
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
