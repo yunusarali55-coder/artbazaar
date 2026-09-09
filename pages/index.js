@@ -52,7 +52,7 @@ export default function Home() {
     {
       id: 'demo-1',
       title: 'Osmanlı El Dövme Bakır İbrik',
-      description: '19. yüzyıl el işçiliği kabartma motifli antika bakır ibrik.',
+      description: '19. yüzyıl el işçiliği kabartma motifli antika bakır ibrik. Koleksiyonluk nadide parça.',
       isOriginal: 'Orijinal',
       artist: 'Koleksiyoner Yunus',
       phone: '05443433881',
@@ -64,7 +64,7 @@ export default function Home() {
     {
       id: 'demo-2',
       title: 'Antika Pirinç Mumluk Şamdan Çifti',
-      description: 'Fransız dönemi ağır pirinç döküm orijinal antika şamdan seti.',
+      description: 'Fransız dönemi ağır pirinç döküm orijinal antika şamdan seti. Kusursuz kondisyonda.',
       isOriginal: 'Orijinal',
       artist: 'Ahmet Antika',
       phone: '05332221100',
@@ -76,7 +76,7 @@ export default function Home() {
     {
       id: 'demo-3',
       title: '18. Yüzyıl Antika Ahşap Oyma Sehpa',
-      description: 'Geleneksel el oyması nadir koleksiyon parça.',
+      description: 'Geleneksel el oyması nadir koleksiyon parça. El işçiliği zarif detaylar.',
       isOriginal: 'Orijinal',
       artist: 'Sanat Galerisi',
       phone: '05554443322',
@@ -148,8 +148,8 @@ export default function Home() {
             description: art.description || 'Açıklama yok',
             isOriginal: art.is_original || 'Orijinal',
             artist: art.artist || 'Anonim',
-            phone: art.phone || 'Belirtilmedi',
-            iban: art.iban || 'Belirtilmedi',
+            phone: art.phone || 'Gizli',
+            iban: art.iban || 'Gizli',
             price: art.price ? `${art.price} ₺` : '1.000 ₺',
             image: art.image_url || 'https://images.unsplash.com/photo-1594897030264-ab7d87efc873?auto=format&fit=crop&w=1200&q=80',
             status: 'Satışta'
@@ -161,7 +161,7 @@ export default function Home() {
         {
           id: 'demo-1',
           title: 'Osmanlı El Dövme Bakır İbrik',
-          description: '19. yüzyıl el işçiliği kabartma motifli antika bakır ibrik.',
+          description: '19. yüzyıl el işçiliği kabartma motifli antika bakır ibrik. Koleksiyonluk nadide parça.',
           isOriginal: 'Orijinal',
           artist: 'Koleksiyoner Yunus',
           phone: '05443433881',
@@ -173,7 +173,7 @@ export default function Home() {
         {
           id: 'demo-2',
           title: 'Antika Pirinç Mumluk Şamdan Çifti',
-          description: 'Fransız dönemi ağır pirinç döküm orijinal antika şamdan seti.',
+          description: 'Fransız dönemi ağır pirinç döküm orijinal antika şamdan seti. Kusursuz kondisyonda.',
           isOriginal: 'Orijinal',
           artist: 'Ahmet Antika',
           phone: '05332221100',
@@ -185,7 +185,7 @@ export default function Home() {
         {
           id: 'demo-3',
           title: '18. Yüzyıl Antika Ahşap Oyma Sehpa',
-          description: 'Geleneksel el oyması nadir koleksiyon parça.',
+          description: 'Geleneksel el oyması nadir koleksiyon parça. El işçiliği zarif detaylar.',
           isOriginal: 'Orijinal',
           artist: 'Sanat Galerisi',
           phone: '05554443322',
@@ -321,7 +321,6 @@ export default function Home() {
       const imageUrl = publicUrlData?.publicUrl;
       if (!imageUrl) throw new Error('Resim URL adresi oluşturulamadı.');
 
-      // PKEY çakışmasını engellemek için id gönderilmiyor (Supabase otomatik üretir)
       const artworkData = {
         title: title.trim(),
         description: description.trim() || 'Açıklama yok',
@@ -343,7 +342,7 @@ export default function Home() {
 
       resetListingForm();
       await fetchArtworksFromSupabase();
-      alert('✅ Ürününüz başarıyla incelenmek üzere vitrine eklendi!');
+      alert('✅ Eseriniz güvenli vitrine başarıyla eklendi!');
     } catch (error) {
       alert('❌ Ürün yüklenirken hata oluştu:\n\n' + (error?.message || 'Bilinmeyen hata'));
     } finally {
@@ -374,14 +373,17 @@ export default function Home() {
 
       if (error) throw error;
 
-      alert('✅ Kayıt başarılı! Lütfen giriş yapın.');
-      if (data?.session) {
+      alert('✅ Kayıt başarılı! Oturum açıldı.');
+      if (data?.user) {
         setCurrentUser({
           id: data.user.id,
           username: username.trim(),
           email: email.trim()
         });
         setShowAuthModal(false);
+        setEmail('');
+        setPassword('');
+        setUsername('');
       } else {
         setAuthMode('login');
       }
@@ -461,7 +463,7 @@ export default function Home() {
         return;
       }
       if (cleanCardNum.length < 15 || cleanCardNum.length > 16) {
-        alert('❌ Geçersiz kart numarası! Kredi kartı numarası 15 veya 16 haneli olmalıdır.');
+        alert('❌ Geçersiz kart numarası! 15 veya 16 haneli olmalıdır.');
         return;
       }
       if (!cardExpiry.trim() || !cardExpiry.includes('/')) {
@@ -480,8 +482,8 @@ export default function Home() {
       id: Date.now(),
       artTitle: pendingArtData.title,
       artist: pendingArtData.artist,
-      phone: pendingArtData.phone,
-      sellerIban: pendingArtData.iban,
+      phone: pendingArtData.phone || 'Gizli (Site Güvencesinde)',
+      sellerIban: pendingArtData.iban || 'Gizli (Site Havuzunda)',
       price: pendingArtData.price,
       buyer: currentUser.username,
       paymentMethod: paymentMethodType === 'kart' ? `Kredi Kartı (${selectedCurrency})` : `Güvenli Havale (${selectedCurrency} - İş Bankası)`,
@@ -497,7 +499,7 @@ export default function Home() {
 
     setShowPaymentModal(false);
     setPendingArtData(null);
-    alert('✅ Siparişiniz oluşturuldu! Ödemeniz ürün fiyatına sabitlenmiş olarak onay bekliyor.');
+    alert('✅ Siparişiniz oluşturuldu! Ödemeniz güvenceye alındı.');
     setActiveTab('my_orders');
   };
 
@@ -514,7 +516,7 @@ export default function Home() {
     });
     setOrders(updated);
     localStorage.setItem('efnan_orders', JSON.stringify(updated));
-    alert('🎉 Ödemeniz başarıyla doğrulandı ve güvenli havuz hesabına alındı!');
+    alert('🎉 Ödemeniz doğrulandı ve güvenli havuz hesabına aktarıldı!');
   };
 
   const confirmDelivery = (orderId) => {
@@ -564,8 +566,15 @@ export default function Home() {
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px 12px' }}>
         {activeTab === 'explore' && (
           <>
+            {/* ŞIK KARŞILAMA / HERO BÖLÜMÜ */}
+            <section style={{ backgroundColor: '#1f2937', color: 'white', padding: '32px 20px', borderRadius: '12px', marginBottom: '30px', textAlign: 'center', backgroundImage: 'linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url(https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=1200&q=80)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+              <h1 style={{ fontSize: '1.8rem', fontWeight: 'bold', marginBottom: '10px' }}>Efnan ArtBazaar'a Hoş Geldiniz</h1>
+              <p style={{ fontSize: '0.95rem', maxWidth: '600px', margin: '0 auto 16px auto', color: '#d1d5db' }}>Değerli antikalar, eşsiz tablolar ve orijinal sanat eserleri tamamen güvenli havuz sistemiyle koruma altında.</p>
+              <button onClick={() => { window.scrollTo({ top: 500, behavior: 'smooth' }); }} style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '6px', fontWeight: 'bold', fontSize: '0.9rem', cursor: 'pointer' }}>Vitrinleri Keşfet</button>
+            </section>
+
             <section style={{ marginBottom: '40px' }}>
-              <h2 style={{ fontSize: '1.3rem', marginBottom: '14px', color: '#111827' }}>Sanat, Tablo ve Tarihi Eser Vitrini</h2>
+              <h2 style={{ fontSize: '1.3rem', marginBottom: '14px', color: '#111827' }}>Sanat, Tablo ve Antika Vitrini</h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
                 {listings.map((art) => (
                   <div key={art.id} onClick={() => setSelectedArt(art)} style={{ backgroundColor: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', cursor: 'pointer', border: '1px solid #e5e7eb' }}>
@@ -573,10 +582,10 @@ export default function Home() {
                     <div style={{ padding: '14px' }}>
                       <span style={{ fontSize: '0.7rem', backgroundColor: art.isOriginal === 'Orijinal' ? '#d1fae5' : '#fee2e2', color: art.isOriginal === 'Orijinal' ? '#065f46' : '#991b1b', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>{art.isOriginal}</span>
                       <h3 style={{ fontSize: '1.05rem', fontWeight: 'bold', margin: '6px 0 4px 0' }}>{art.title}</h3>
-                      <p style={{ fontSize: '0.8rem', color: '#6b7280' }}>Satıcı / Sanatçı: {art.artist}</p>
+                      <p style={{ fontSize: '0.8rem', color: '#6b7280' }}>Sanatçı / Sahip: {art.artist}</p>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
                         <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1.1rem' }}>{art.price}</span>
-                        <button onClick={(e) => { e.stopPropagation(); setSelectedArt(art); }} style={{ backgroundColor: '#4f46e5', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 'bold', cursor: 'pointer' }}>İncele & Satın Al</button>
+                        <button onClick={(e) => { e.stopPropagation(); setSelectedArt(art); }} style={{ backgroundColor: '#4f46e5', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 'bold', cursor: 'pointer' }}>Detay & Güvenli Al</button>
                       </div>
                     </div>
                   </div>
@@ -586,7 +595,7 @@ export default function Home() {
 
             <section style={{ maxWidth: '650px', margin: '0 auto', backgroundColor: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
               <h2 style={{ fontSize: '1.2rem', marginBottom: '6px', color: '#111827' }}>Eser / Tarihi Parça Yükleme Paneli</h2>
-              <p style={{ fontSize: '0.82rem', color: '#6b7280', marginBottom: '16px' }}>Tablo, antika, tarihi eser veya sanat objenizi detaylı bilgileriyle birlikte güvenle vitrine ekleyin.</p>
+              <p style={{ fontSize: '0.82rem', color: '#6b7280', marginBottom: '16px' }}>Telefon ve IBAN bilgileriniz sadece site yöneticisinde güvende kalır; alıcılar doğrudan göremez ve sizinle iletişime geçemez (Alım-satım site üzerinden yürütülür).</p>
               
               <form onSubmit={triggerListingProcess} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <input type="text" placeholder="Eser / Obje Adı" value={title} onChange={(e) => setTitle(e.target.value)} required style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
@@ -608,8 +617,8 @@ export default function Home() {
                 <textarea placeholder="Eser Açıklaması ve Detayları" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
 
                 <div style={{ display: 'flex', gap: '10px' }}>
-                  <input type="text" placeholder="İletişim Telefonu" value={phone} onChange={(e) => setPhone(e.target.value)} required style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
-                  <input type="text" placeholder="Ödeme Alınacak IBAN" value={iban} onChange={(e) => setIban(e.target.value)} required style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
+                  <input type="text" placeholder="Size Ulaşacak Tel (Alıcı Göremez)" value={phone} onChange={(e) => setPhone(e.target.value)} required style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
+                  <input type="text" placeholder="Ödeme Alınacak IBAN (Alıcı Göremez)" value={iban} onChange={(e) => setIban(e.target.value)} required style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
                 </div>
 
                 <div style={{ border: '2px dashed #d1d5db', padding: '16px', borderRadius: '8px', textAlign: 'center', backgroundColor: '#f9fafb' }}>
@@ -658,8 +667,8 @@ export default function Home() {
                       <h4 style={{ fontWeight: 'bold', fontSize: '1rem' }}>{ord.artTitle}</h4>
                       <span style={{ fontWeight: 'bold', color: '#059669' }}>{ord.price}</span>
                     </div>
-                    <p style={{ fontSize: '0.85rem', color: '#4b5563', marginBottom: '4px' }}>Satıcı: {ord.artist} | Tel: {ord.phone}</p>
-                    <p style={{ fontSize: '0.85rem', color: '#4b5563', marginBottom: '8px' }}>Ödeme Yöntemi: {ord.paymentMethod}</p>
+                    <p style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '4px' }}>Satıcı İletişimi: <b>Gizli Tutuldu (Site Güvencesinde)</b></p>
+                    <p style={{ fontSize: '0.85rem', color: '#4b5563', marginBottom: '4px' }}>Ödeme Yöntemi: {ord.paymentMethod}</p>
                     <p style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#d97706', marginBottom: '12px' }}>Durum: {ord.statusText}</p>
 
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -684,8 +693,9 @@ export default function Home() {
             <img src={selectedArt.image} alt={selectedArt.title} style={{ width: '100%', height: '240px', objectFit: 'cover' }} />
             <div style={{ padding: '20px' }}>
               <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '8px' }}>{selectedArt.title}</h3>
-              <p style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '4px' }}>Sanatçı / Satıcı: {selectedArt.artist}</p>
-              <p style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '12px' }}>Açıklama: {selectedArt.description}</p>
+              <p style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '4px' }}>Sanatçı / Sahip: {selectedArt.artist}</p>
+              <p style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '4px' }}>İletişim Bilgisi: <span style={{ color: '#ef4444', fontWeight: 'bold' }}>Gizli (Site Aracı)</span></p>
+              <p style={{ fontSize: '0.85rem', color: '#4b5563', marginBottom: '12px' }}>Açıklama: {selectedArt.description}</p>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <span style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#059669' }}>{selectedArt.price}</span>
                 <span style={{ fontSize: '0.8rem', backgroundColor: '#d1fae5', color: '#065f46', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold' }}>{selectedArt.isOriginal}</span>
@@ -703,7 +713,7 @@ export default function Home() {
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px', zIndex: 60 }}>
           <div style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '450px', width: '100%', padding: '24px', boxShadow: '0 10px 15px rgba(0,0,0,0.2)' }}>
             <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '12px' }}>Güvenli Ödeme / Havuz Sistemi</h3>
-            <p style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '16px' }}>Ödemeniz siz ürünü teslim alıp onaylayana kadar güvenli havuz hesabında tutulur.</p>
+            <p style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '16px' }}>Ödemeniz siz ürünü teslim alıp onaylayana kadar güvenli havuz hesabında tutulur. Satıcıyla iletişim kurulmaz, tüm süreç site garantisindedir.</p>
 
             <div style={{ marginBottom: '16px' }}>
               <label style={{ fontSize: '0.8rem', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Ödeme Yöntemi:</label>
