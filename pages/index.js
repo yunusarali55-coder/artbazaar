@@ -455,8 +455,8 @@ export default function Home() {
                     </div>
                   ) : (
                     <div>
-                      <p style={{ fontSize: '0.85rem', color: '#4b5563', marginBottom: '8px' }}>Eserin Fotoğrafını Seçin</p>
-                      <input type="file" accept="image/*" onChange={(e) => handleImageSelect(e.target.files[0])} style={{ fontSize: '0.8rem' }} />
+                      <p style={{ fontSize: '0.85rem', color: '#4b5563', marginBottom: '8px' }}>Eserin Fotoğrafını Çek veya Seç</p>
+                      <input type="file" accept="image/*" capture="environment" onChange={(e) => handleImageSelect(e.target.files[0])} style={{ fontSize: '0.8rem' }} />
                     </div>
                   )}
                 </div>
@@ -582,7 +582,7 @@ export default function Home() {
                 </button>
               </div>
               
-              <button type="submit" disabled={authAuthLoading || authLoading} style={{ backgroundColor: authLoading ? '#9ca3af' : '#4f46e5', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem', marginTop: '4px' }}>
+              <button type="submit" disabled={authLoading} style={{ backgroundColor: authLoading ? '#9ca3af' : '#4f46e5', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem', marginTop: '4px' }}>
                 {authLoading ? 'İşleniyor...' : (authMode === 'login' ? 'Giriş Yap' : 'Kayıt Ol')}
               </button>
             </form>
