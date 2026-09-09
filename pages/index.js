@@ -90,7 +90,6 @@ export default function Home() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // Supabase Auth durumunu dinle
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setCurrentUser({
@@ -322,7 +321,7 @@ export default function Home() {
       const imageUrl = publicUrlData?.publicUrl;
       if (!imageUrl) throw new Error('Resim URL adresi oluşturulamadı.');
 
-      // PKEY çakışmasını önlemek için id alanını INSERT nesnesinden siliyoruz (Supabase otomatik üretir)
+      // PKEY çakışmasını engellemek için id gönderilmiyor (Supabase otomatik üretir)
       const artworkData = {
         title: title.trim(),
         description: description.trim() || 'Açıklama yok',
@@ -375,7 +374,7 @@ export default function Home() {
 
       if (error) throw error;
 
-      alert('✅ Kayıt başarılı! Lütfen giriş yapın veya oturumunuz açıldıysa devam edin.');
+      alert('✅ Kayıt başarılı! Lütfen giriş yapın.');
       if (data?.session) {
         setCurrentUser({
           id: data.user.id,
