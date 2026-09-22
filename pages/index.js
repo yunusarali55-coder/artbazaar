@@ -9,6 +9,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // 👑 Site Sahibi / Yönetici E-posta Adresi
 const ADMIN_EMAIL = 'beyef.alfa@gmail.com';
+const COMMISSION_RATE = 0.10; // %10 Site Komisyonu
 
 export default function Home() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -43,7 +44,7 @@ export default function Home() {
   const [buyerFullName, setBuyerFullName] = useState('');
   const [buyerPhone, setBuyerPhone] = useState('');
   const [buyerAddress, setBuyerAddress] = useState('');
-  const [bankReceiptNo, setBankReceiptNo] = useState(''); // 🧾 Dekont / İşlem No
+  const [bankReceiptNo, setBankReceiptNo] = useState(''); 
   const [havaleConfirmed, setHavaleConfirmed] = useState(false);
 
   const [orders, setOrders] = useState([]);
@@ -57,7 +58,6 @@ export default function Home() {
 
   const [listings, setListings] = useState([]);
 
-  // Kullanıcının site sahibi (admin) olup olmadığını kontrol eden yardımcı fonksiyon
   const isAdmin = currentUser && (currentUser.email === ADMIN_EMAIL || currentUser.isAdmin === true);
 
   useEffect(() => {
@@ -107,7 +107,7 @@ export default function Home() {
         price: art.price ? `${art.price} ₺` : '1.000 ₺',
         rawPrice: art.price || 1000,
         image: art.image_url || '',
-        status: art.status || 'Satışta' // 'Satışta' veya 'Satıldı'
+        status: art.status || 'Satışta'
       }));
 
       setListings(formattedArtworks);
@@ -376,13 +376,20 @@ export default function Home() {
     setPaymentProcessing(true);
 
     setTimeout(() => {
+      const rawP = pendingArtData.rawPrice || 1000;
+      const commissionAmount = rawP * COMMISSION_RATE;
+      const sellerPayout = rawP - commissionAmount;
+
       const newOrder = {
         id: Date.now(),
         artTitle: pendingArtData.title,
         artId: pendingArtData.id,
         artist: pendingArtData.artist,
+        sellerIban: pendingArtData.iban, // Satıcının IBAN'ı (Yönetici ödemeyi yapsın diye)
         price: pendingArtData.price,
-        rawPrice: pendingArtData.rawPrice,
+        rawPrice: rawP,
+        commission: commissionAmount,
+        sellerPayout: sellerPayout,
         image: pendingArtData.image,
         buyerFullName: buyerFullName.trim(),
         buyerPhone: buyerPhone.trim(),
@@ -432,7 +439,7 @@ export default function Home() {
       console.error(e);
     }
 
-    alert('👑 Ödeme onaylandı! Eser vitrinde "SATILDI" olarak işaretlendi ve satın alma kapatıldı.');
+    alert('👑 Ödeme onaylandı! Eser vitrinde "SATILDI" olarak işaretlendi.');
   };
 
   const confirmDelivery = async (orderId, artId) => {
@@ -465,6 +472,11 @@ export default function Home() {
     alert('🎉 Teslimat onaylandı! Ürün başarıyla siteden kaldırıldı.');
   };
 
+  // Yönetici İstatistikleri Hesaplama
+  const totalVolume = orders.reduce((acc, o) => acc + (o.rawPrice || 0), 0);
+  const totalCommissionEarned = orders.reduce((acc, o) => acc + (o.commission || 0), 0);
+  const pendingApprovalsCount = orders.filter(o => o.status === 'waiting_admin_approval').length;
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', fontFamily: 'Arial, sans-serif' }}>
       <Head>
@@ -496,10 +508,9 @@ export default function Home() {
           <button onClick={() => setActiveTab('my_orders')} style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', backgroundColor: activeTab === 'my_orders' ? '#4f46e5' : '#e5e7eb', color: activeTab === 'my_orders' ? 'white' : '#374151', fontWeight: 'bold', cursor: 'pointer' }}>Sipariş Takibi ({orders.length})</button>
         )}
         
-        {/* 👑 SADECE YÖNETİCİ (ADMIN) GÖREBİLİR */}
         {isAdmin && (
           <button onClick={() => setActiveTab('admin_panel')} style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', backgroundColor: activeTab === 'admin_panel' ? '#d97706' : '#fef3c7', color: activeTab === 'admin_panel' ? 'white' : '#92400e', fontWeight: 'bold', cursor: 'pointer', border: '1px dashed #b45309' }}>
-            👑 Site Sahibi Ödeme Onay Paneli
+            👑 Yönetici & Komisyon Paneli {pendingApprovalsCount > 0 && `(${pendingApprovalsCount})`}
           </button>
         )}
       </div>
@@ -606,7 +617,7 @@ export default function Home() {
 
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <input type="text" placeholder="Telefonunuz (Alıcı Göremez)" value={phone} onChange={(e) => setPhone(e.target.value)} required style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.9rem' }} />
-                  <input type="text" placeholder="IBAN Numaranız (Alıcı Göremez)" value={iban} onChange={(e) => setIban(e.target.value)} required style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.9rem' }} />
+                  <input type="text" placeholder="IBAN Numaranız (Ödeme için gizli tutulur)" value={iban} onChange={(e) => setIban(e.target.value)} required style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.9rem' }} />
                 </div>
 
                 <div style={{ border: '2px dashed #d1d5db', padding: '16px', borderRadius: '8px', textAlign: 'center', backgroundColor: '#f9fafb' }}>
@@ -668,35 +679,59 @@ export default function Home() {
           </section>
         )}
 
-        {/* 👑 SADECE YÖNETİCİ GÖREBİLİR: ADMIN PANELİ */}
+        {/* 👑 SADECE YÖNETİCİ GÖREBİLİR: KOMİSYON & YÖNETİCİ PANELİ */}
         {activeTab === 'admin_panel' && isAdmin && (
-          <section style={{ maxWidth: '800px', margin: '0 auto', backgroundColor: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 6px rgba(0,0,0,0.08)', border: '2px solid #d97706' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ fontSize: '1.2rem', color: '#92400e', fontWeight: 'bold' }}>👑 Site Sahibi Ödeme Onay Paneli (Yunus Aralı)</h2>
-              <span style={{ fontSize: '0.8rem', backgroundColor: '#fef3c7', color: '#b45309', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold' }}>Banka Hesabı: İş Bankası</span>
+          <section style={{ maxWidth: '850px', margin: '0 auto', backgroundColor: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 6px rgba(0,0,0,0.08)', border: '2px solid #d97706' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+              <h2 style={{ fontSize: '1.2rem', color: '#92400e', fontWeight: 'bold' }}>👑 Yönetici, Ciro & Komisyon Paneli (Yunus Aralı)</h2>
+              <span style={{ fontSize: '0.8rem', backgroundColor: '#fef3c7', color: '#b45309', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold' }}>Komisyon Oranı: %10</span>
             </div>
-            <p style={{ fontSize: '0.85rem', color: '#4b5563', marginBottom: '20px' }}>Alıcıların yaptığı havaleler banka hesabınıza geçtiğinde alıcının girdiği <b>Dekont/İşlem No</b>'yu kontrol ederek buradan <b>"Ödemeyi Onayla"</b> butonuna basabilirsiniz.</p>
+
+            {/* FİNANSAL ÖZET KARTLARI */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', marginBottom: '24px' }}>
+              <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fcd34d', padding: '14px', borderRadius: '8px' }}>
+                <p style={{ fontSize: '0.75rem', color: '#b45309', fontWeight: 'bold', textTransform: 'uppercase' }}>Toplam Satış Hacmi</p>
+                <p style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#1f2937', marginTop: '4px' }}>{totalVolume.toLocaleString('tr-TR')} ₺</p>
+              </div>
+              <div style={{ backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', padding: '14px', borderRadius: '8px' }}>
+                <p style={{ fontSize: '0.75rem', color: '#047857', fontWeight: 'bold', textTransform: 'uppercase' }}>Net Site Kazancınız (%10 Komisyon)</p>
+                <p style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#059669', marginTop: '4px' }}>{totalCommissionEarned.toLocaleString('tr-TR')} ₺</p>
+              </div>
+              <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', padding: '14px', borderRadius: '8px' }}>
+                <p style={{ fontSize: '0.75rem', color: '#1d4ed8', fontWeight: 'bold', textTransform: 'uppercase' }}>Toplam Sipariş Adedi</p>
+                <p style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#1e40af', marginTop: '4px' }}>{orders.length} Adet</p>
+              </div>
+            </div>
+
+            <p style={{ fontSize: '0.85rem', color: '#4b5563', marginBottom: '20px' }}>Alıcıların yaptığı havaleler hesabınıza geçtiğinde <b>Dekont/İşlem No</b>'yu kontrol edip onaylayın. Onay sonrasında satıcıya gönderilecek net tutar ve IBAN bilgisi aşağıda listelenir.</p>
 
             {orders.length === 0 ? (
-              <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>Henüz bekleyen ödeme bildirimi yok.</p>
+              <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>Henüz bekleyen sipariş veya işlem yok.</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 {orders.map((ord) => (
-                  <div key={ord.id} style={{ border: '1px solid #fcd34d', padding: '16px', borderRadius: '8px', backgroundColor: '#fffbeb', display: 'flex', gap: '14px', alignItems: 'center' }}>
+                  <div key={ord.id} style={{ border: '1px solid #fcd34d', padding: '16px', borderRadius: '8px', backgroundColor: '#fffbeb', display: 'flex', gap: '14px', alignItems: 'center', flexWrap: 'wrap' }}>
                     {ord.image && <img src={ord.image} alt={ord.artTitle} style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '6px' }} />}
-                    <div style={{ flex: 1 }}>
+                    <div style={{ flex: 1, minWidth: '250px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                         <h4 style={{ fontWeight: 'bold', fontSize: '1.05rem', color: '#1f2937' }}>{ord.artTitle}</h4>
-                        <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1.05rem' }}>{ord.price}</span>
+                        <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1.05rem' }}>Satış: {ord.price}</span>
                       </div>
                       <p style={{ fontSize: '0.85rem', color: '#1f2937', marginBottom: '2px' }}><b>Alıcı:</b> {ord.buyerFullName} ({ord.buyerPhone})</p>
-                      <p style={{ fontSize: '0.85rem', color: '#92400e', marginBottom: '2px', backgroundColor: '#fef3c7', padding: '4px 6px', borderRadius: '4px', display: 'inline-block' }}>🧾 <b>Dekont / İşlem No:</b> {ord.bankReceiptNo || 'Belirtilmemiş'}</p>
-                      <p style={{ fontSize: '0.85rem', color: '#1f2937', marginBottom: '4px', marginTop: '2px' }}><b>Teslimat Adresi:</b> {ord.buyerAddress}</p>
-                      <p style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#d97706', marginBottom: '10px' }}><b>Sipariş Durumu:</b> {ord.statusText}</p>
+                      <p style={{ fontSize: '0.85rem', color: '#92400e', marginBottom: '2px', backgroundColor: '#fef3c7', padding: '4px 6px', borderRadius: '4px', display: 'inline-block' }}>🧾 <b>Dekont No:</b> {ord.bankReceiptNo || 'Belirtilmemiş'}</p>
+                      
+                      {/* KOMİSYON DAĞILIM DETAYI */}
+                      <div style={{ backgroundColor: 'white', padding: '8px', borderRadius: '6px', border: '1px solid #e5e7eb', margin: '8px 0', fontSize: '0.8rem' }}>
+                        <p style={{ color: '#047857', marginBottom: '2px' }}>🏛️ Site Komisyonu (%10): <b>{ord.commission ? `${ord.commission.toLocaleString('tr-TR')} ₺` : '-'}</b></p>
+                        <p style={{ color: '#1d4ed8', marginBottom: '2px' }}>💸 Satıcıya Aktarılacak Net Tutar: <b>{ord.sellerPayout ? `${ord.sellerPayout.toLocaleString('tr-TR')} ₺` : '-'}</b></p>
+                        <p style={{ color: '#374151' }}>🏦 Satıcı Gizli IBAN: <span style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{ord.sellerIban || 'Belirtilmemiş'}</span></p>
+                      </div>
+
+                      <p style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#d97706', marginBottom: '10px' }}><b>Durum:</b> {ord.statusText}</p>
                       
                       {ord.status === 'waiting_admin_approval' && (
                         <button onClick={() => adminApprovePayment(ord.id, ord.artId)} style={{ backgroundColor: '#d97706', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-                          ✅ Ödemeyi Onayla (Eseri "Satıldı" İşaretle & Süreci Başlat)
+                          ✅ Ödemeyi Onayla (Eseri "Satıldı" İşaretle)
                         </button>
                       )}
                     </div>
