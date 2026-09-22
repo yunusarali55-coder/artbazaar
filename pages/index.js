@@ -473,7 +473,7 @@ export default function Home() {
         bankReceiptNo: bankReceiptNo.trim(),
         paymentMethod: paymentMethodName,
         status: 'waiting_admin_approval',
-        statusText: 'Ödeme ve Dekont/Hash Bildirildi — Site Sahibi Onayı Bekleniyor ⏳',
+        statusText: 'Ödeme සහ Dekont/Hash Bildirildi — Site Sahibi Onayı Bekleniyor ⏳',
         date: new Date().toLocaleDateString('tr-TR')
       };
 
