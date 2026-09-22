@@ -832,9 +832,8 @@ export default function Home() {
                 <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '4px', color: '#1f2937' }}>{selectedArt.title}</h3>
                 <button onClick={() => handleShareArtwork(selectedArt)} style={{ backgroundColor: '#e0e7ff', color: '#3730a3', border: 'none', padding: '5px 8px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}>🔗 Paylaş</button>
               </div>
-              <p style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: '4px' }}>Koleksiyon Sahibi: {selectedArt.artist}</p>
-              <p style={{ fontSize: '0.8rem', color: '#ef4444', fontWeight: 'bold', marginBottom: '6px' }}>Satıcı İletişimi: Gizli (Güvenli Havuzda)</p>
-              <p style={{ fontSize: '0.82rem', color: '#4b5563', marginBottom: '14px', lineHeight: '1.4' }}>{selectedArt.description}</p>
+              <p style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: '8px' }}>Koleksiyon Sahibi: {selectedArt.artist}</p>
+              <p style={{ fontSize: '0.85rem', color: '#4b5563', marginBottom: '16px', lineHeight: '1.4', backgroundColor: '#f9fafb', padding: '10px', borderRadius: '6px', border: '1px solid #e5e7eb' }}>{selectedArt.description}</p>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <span style={{ fontSize: '1.15rem', fontWeight: 'bold', color: '#059669' }}>{selectedArt.price}</span>
                 <span style={{ fontSize: '0.72rem', backgroundColor: '#d1fae5', color: '#065f46', padding: '3px 6px', borderRadius: '4px', fontWeight: 'bold' }}>{selectedArt.isOriginal}</span>
