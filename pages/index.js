@@ -247,7 +247,7 @@ export default function Home() {
   };
 
   const handleDeleteMyListing = async (artId) => {
-    if (!confirm('❌ Bu eseri satıştan kaldırmak / vazgeçmek istediğinize emin misiniz?')) return;
+    if (!confirm('❌ Bu eseri satıştan kaldırmak istediğinize emin misiniz?')) return;
 
     try {
       const { error } = await supabase
@@ -260,8 +260,9 @@ export default function Home() {
         return;
       }
 
+      setSelectedArt(null);
       await fetchArtworksFromSupabase();
-      alert('✅ Eseriniz vitrinden başarıyla kaldırıldı.');
+      alert('✅ Eser vitrinden başarıyla kaldırıldı.');
     } catch (err) {
       alert('❌ İşlem başarısız.');
     }
@@ -482,7 +483,6 @@ export default function Home() {
     alert('🎉 Teslimat onaylandı! Ürün başarıyla siteden kaldırıldı.');
   };
 
-  // Yönetici İstatistikleri Hesaplama
   const totalVolume = orders.reduce((acc, o) => acc + (o.rawPrice || 0), 0);
   const totalCommissionEarned = orders.reduce((acc, o) => acc + (o.commission || 0), 0);
   const pendingApprovalsCount = orders.filter(o => o.status === 'waiting_admin_approval').length;
@@ -510,7 +510,6 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* ÜST MENÜ SEKMELERİ */}
       <div style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '8px', padding: '10px 12px', backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', flexWrap: 'wrap', boxSizing: 'border-box' }}>
         <button onClick={() => setActiveTab('explore')} style={{ padding: '7px 12px', borderRadius: '6px', border: 'none', backgroundColor: activeTab === 'explore' ? '#4f46e5' : '#e5e7eb', color: activeTab === 'explore' ? 'white' : '#374151', fontWeight: 'bold', fontSize: '0.82rem', cursor: 'pointer' }}>Antika Vitrini</button>
         
@@ -533,7 +532,6 @@ export default function Home() {
               <p style={{ fontSize: '0.85rem', maxWidth: '600px', margin: '0 auto', color: '#d1d5db', lineHeight: '1.4' }}>Müzelik antikalar, orijinal yağlı boya tablolar, tarihi objeler ve güvenli havuz/kripto ödeme seçenekleri burada buluşuyor.</p>
             </section>
 
-            {/* VİTRİN */}
             <section style={{ marginBottom: '30px' }}>
               <h2 style={{ fontSize: '1.1rem', marginBottom: '12px', color: '#111827' }}>Vitrendeki Tarihi Eserler ve Tablolar</h2>
               {listings.length === 0 ? (
@@ -544,7 +542,8 @@ export default function Home() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
                   {listings.map((art) => {
                     const isSold = art.status === 'Satıldı';
-                    const isMyListing = currentUser && currentUser.email === art.user_email;
+                    // Sadece ürünü yükleyen kişi VEYA site sahibi (admin) silebilir
+                    const canDelete = currentUser && (currentUser.email === art.user_email || isAdmin);
 
                     return (
                       <div key={art.id} onClick={() => !isSold && setSelectedArt(art)} style={{ backgroundColor: 'white', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 2px 5px rgba(0,0,0,0.08)', cursor: isSold ? 'default' : 'pointer', border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', opacity: isSold ? 0.75 : 1, position: 'relative' }}>
@@ -571,7 +570,7 @@ export default function Home() {
                             <span style={{ fontWeight: 'bold', color: isSold ? '#9ca3af' : '#059669', fontSize: '1.05rem' }}>{art.price}</span>
                             
                             <div style={{ display: 'flex', gap: '6px' }}>
-                              {isMyListing && (
+                              {canDelete && (
                                 <button onClick={(e) => { e.stopPropagation(); handleDeleteMyListing(art.id); }} style={{ backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '5px 8px', borderRadius: '6px', fontSize: '0.72rem', fontWeight: 'bold', cursor: 'pointer' }}>
                                   🗑️ Kaldır
                                 </button>
@@ -592,7 +591,6 @@ export default function Home() {
               )}
             </section>
 
-            {/* ÜRÜN YÜKLEME FORMU */}
             <section style={{ width: '100%', maxWidth: '600px', margin: '0 auto', backgroundColor: 'white', padding: '20px 16px', borderRadius: '12px', boxShadow: '0 2px 6px rgba(0,0,0,0.08)', position: 'relative', boxSizing: 'border-box' }}>
               
               {!currentUser && (
@@ -604,7 +602,7 @@ export default function Home() {
               )}
 
               <h2 style={{ fontSize: '1.1rem', marginBottom: '4px', color: '#111827' }}>Antika veya Tarihi Eser İlanı Yükle</h2>
-              <p style={{ fontSize: '0.78rem', color: '#6b7280', marginBottom: '14px' }}>Telefon ve IBAN numaralarınız alıcılara kesinlikle gösterilmez, işlemler havuz sistemiyle yapılır.</p>
+              <p style={{ fontSize: '0.78rem', color: '#6b7280', marginBottom: '14px' }}>Telefon ve IBAN numarlarınız alıcılara kesinlikle gösterilmez, işlemler havuz sistemiyle yapılır.</p>
               
               <form onSubmit={triggerListingProcess} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <input type="text" placeholder="Eser / Antika Adı" value={title} onChange={(e) => setTitle(e.target.value)} required style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.88rem', boxSizing: 'border-box' }} />
@@ -690,7 +688,6 @@ export default function Home() {
           </section>
         )}
 
-        {/* 👑 SADECE YÖNETİCİ GÖREBİLİR: KOMİSYON & YÖNETİCİ PANELİ */}
         {activeTab === 'admin_panel' && isAdmin && (
           <section style={{ width: '100%', maxWidth: '850px', margin: '0 auto', backgroundColor: 'white', padding: '20px 16px', borderRadius: '12px', boxShadow: '0 2px 6px rgba(0,0,0,0.08)', border: '2px solid #d97706', boxSizing: 'border-box' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
@@ -698,7 +695,6 @@ export default function Home() {
               <span style={{ fontSize: '0.75rem', backgroundColor: '#fef3c7', color: '#b45309', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold' }}>Komisyon: %10</span>
             </div>
 
-            {/* FİNANSAL ÖZET KARTLARI */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '20px' }}>
               <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fcd34d', padding: '12px', borderRadius: '8px' }}>
                 <p style={{ fontSize: '0.72rem', color: '#b45309', fontWeight: 'bold', textTransform: 'uppercase' }}>Toplam Satış Hacmi</p>
@@ -770,7 +766,13 @@ export default function Home() {
                 <span style={{ fontSize: '1.15rem', fontWeight: 'bold', color: '#059669' }}>{selectedArt.price}</span>
                 <span style={{ fontSize: '0.72rem', backgroundColor: '#d1fae5', color: '#065f46', padding: '3px 6px', borderRadius: '4px', fontWeight: 'bold' }}>{selectedArt.isOriginal}</span>
               </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
+              
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {currentUser && (currentUser.email === selectedArt.user_email || isAdmin) && (
+                  <button onClick={() => handleDeleteMyListing(selectedArt.id)} style={{ backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '10px 12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>
+                    🗑️ Vitrinden Kaldır
+                  </button>
+                )}
                 <button onClick={() => { setSelectedArt(null); triggerBuyProcess(selectedArt); }} style={{ flex: 1, backgroundColor: '#10b981', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>Hemen Satın Al</button>
                 <button onClick={() => setSelectedArt(null)} style={{ backgroundColor: '#e5e7eb', color: '#374151', border: 'none', padding: '10px 12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>Kapat</button>
               </div>
@@ -786,7 +788,6 @@ export default function Home() {
             <h3 style={{ fontSize: '1.05rem', fontWeight: 'bold', marginBottom: '4px', color: '#1f2937' }}>🏛️ Güvenli Ödeme & Dekont/Hash Formu</h3>
             <p style={{ fontSize: '0.78rem', color: '#6b7280', marginBottom: '10px' }}>Eser: <b>{pendingArtData.title}</b> — <span style={{ color: '#059669', fontWeight: 'bold' }}>Tutar: {pendingArtData.price}</span></p>
 
-            {/* ÖDEME YÖNTEMİ SEÇİMİ */}
             <div style={{ marginBottom: '12px' }}>
               <label style={{ fontSize: '0.78rem', fontWeight: 'bold', color: '#374151', display: 'block', marginBottom: '4px' }}>Ödeme Yöntemi Seçin:</label>
               <div style={{ display: 'flex', gap: '6px' }}>
@@ -796,7 +797,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* SEÇİLEN ÖDEME DETAYLARI & QR KOD */}
             {paymentType === 'bank' && (
               <div style={{ backgroundColor: '#f0fdf4', padding: '10px', borderRadius: '8px', border: '1px solid #bbf7d0', marginBottom: '12px', fontSize: '0.8rem' }}>
                 <p style={{ fontWeight: 'bold', color: '#166534', marginBottom: '4px' }}>İş Bankası Havuz Hesabı:</p>
