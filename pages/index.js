@@ -40,10 +40,11 @@ export default function Home() {
   const [pendingArtData, setPendingArtData] = useState(null);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
 
-  // Alıcı Teslimat ve Dekont Bilgileri
+  // Alıcı Teslimat, Ödeme Yöntemi ve Dekont Bilgileri
   const [buyerFullName, setBuyerFullName] = useState('');
   const [buyerPhone, setBuyerPhone] = useState('');
   const [buyerAddress, setBuyerAddress] = useState('');
+  const [paymentType, setPaymentType] = useState('bank'); // 'bank', 'usdt', 'btc'
   const [bankReceiptNo, setBankReceiptNo] = useState(''); 
   const [havaleConfirmed, setHavaleConfirmed] = useState(false);
 
@@ -53,7 +54,10 @@ export default function Home() {
   const escrowAccounts = {
     bankName: 'Türkiye İş Bankası',
     tlIban: 'TR41 0006 4000 0017 3003 4172 52',
-    accountHolder: 'Yunus Aralı'
+    accountHolder: 'Yunus Aralı',
+    cryptoNetwork: 'BSC (BNB Smart Chain / BEP20)',
+    usdtWallet: '0x226391d8dbe7f003f907c8b55bc19793c4c12700',
+    btcWallet: '0x226391d8dbe7f003f907c8b55bc19793c4c12700'
   };
 
   const [listings, setListings] = useState([]);
@@ -344,6 +348,7 @@ export default function Home() {
     setBuyerFullName('');
     setBuyerPhone('');
     setBuyerAddress('');
+    setPaymentType('bank');
     setBankReceiptNo('');
     setHavaleConfirmed(false);
     setShowPaymentModal(true);
@@ -365,11 +370,11 @@ export default function Home() {
       return;
     }
     if (!bankReceiptNo.trim()) {
-      alert('❌ Lütfen banka işlem dekont numarasını veya referans kodunu giriniz.');
+      alert('❌ Lütfen işlem dekont numarasını, referans kodunu veya kripto transfer Hash değerini giriniz.');
       return;
     }
     if (!havaleConfirmed) {
-      alert('❌ Lütfen havaleyi gerçekleştirdiğinizi onaylamak için kutucuğu işaretleyin.');
+      alert('❌ Lütfen ödemeyi gerçekleştirdiğinizi onaylamak için kutucuğu işaretleyin.');
       return;
     }
 
@@ -380,12 +385,17 @@ export default function Home() {
       const commissionAmount = rawP * COMMISSION_RATE;
       const sellerPayout = rawP - commissionAmount;
 
+      const paymentMethodName = 
+        paymentType === 'usdt' ? 'USDT (BEP20)' :
+        paymentType === 'btc' ? 'Bitcoin (BTC / BEP20)' : 
+        'Güvenli Havale / EFT (İş Bankası)';
+
       const newOrder = {
         id: Date.now(),
         artTitle: pendingArtData.title,
         artId: pendingArtData.id,
         artist: pendingArtData.artist,
-        sellerIban: pendingArtData.iban, // Satıcının IBAN'ı (Yönetici ödemeyi yapsın diye)
+        sellerIban: pendingArtData.iban, 
         price: pendingArtData.price,
         rawPrice: rawP,
         commission: commissionAmount,
@@ -395,9 +405,9 @@ export default function Home() {
         buyerPhone: buyerPhone.trim(),
         buyerAddress: buyerAddress.trim(),
         bankReceiptNo: bankReceiptNo.trim(),
-        paymentMethod: 'Güvenli Havale / EFT (İş Bankası)',
+        paymentMethod: paymentMethodName,
         status: 'waiting_admin_approval',
-        statusText: 'Ödeme ve Dekont Bildirildi — Site Sahibi Onayı Bekleniyor ⏳',
+        statusText: 'Ödeme ve Dekont/Hash Bildirildi — Site Sahibi Onayı Bekleniyor ⏳',
         date: new Date().toLocaleDateString('tr-TR')
       };
 
@@ -409,7 +419,7 @@ export default function Home() {
       setShowPaymentModal(false);
       setPendingArtData(null);
 
-      alert(`✅ Ödeme ve dekont bildiriminiz başarıyla iletildi!\n\nSite sahibi İş Bankası hesabını kontrol edip ödemenizi onayladığında kargonuz hazırlanacaktır.`);
+      alert(`✅ Ödeme bildiriminiz başarıyla iletildi!\n\nSite sahibi cüzdan/banka hesabını kontrol edip ödemenizi onayladığında kargonuz hazırlanacaktır.`);
       setActiveTab('my_orders');
     }, 1200);
   };
@@ -520,7 +530,7 @@ export default function Home() {
           <>
             <section style={{ backgroundColor: '#1f2937', color: 'white', padding: '30px 20px', borderRadius: '12px', marginBottom: '30px', textAlign: 'center' }}>
               <h1 style={{ fontSize: '1.6rem', fontWeight: 'bold', marginBottom: '8px' }}>Efnan Antika ve Tarihi Eser Koleksiyonu</h1>
-              <p style={{ fontSize: '0.9rem', maxWidth: '600px', margin: '0 auto', color: '#d1d5db' }}>Müzelik antikalar, orijinal yağlı boya tablolar ve tarihi objeler güvenli havuz koruması altında burada buluşuyor.</p>
+              <p style={{ fontSize: '0.9rem', maxWidth: '600px', margin: '0 auto', color: '#d1d5db' }}>Müzelik antikalar, orijinal yağlı boya tablolar, tarihi objeler ve kripto/havale ödeme seçenekleri burada buluşuyor.</p>
             </section>
 
             {/* VİTRİN */}
@@ -664,8 +674,9 @@ export default function Home() {
                         <h4 style={{ fontWeight: 'bold', fontSize: '1rem', color: '#1f2937' }}>{ord.artTitle}</h4>
                         <span style={{ fontWeight: 'bold', color: '#059669' }}>{ord.price}</span>
                       </div>
+                      <p style={{ fontSize: '0.8rem', color: '#4b5563', marginBottom: '2px' }}>Ödeme Yöntemi: <b>{ord.paymentMethod}</b></p>
                       <p style={{ fontSize: '0.8rem', color: '#4b5563', marginBottom: '2px' }}>Alıcı Adı: <b>{ord.buyerFullName}</b> | Tel: <b>{ord.buyerPhone}</b></p>
-                      <p style={{ fontSize: '0.8rem', color: '#4b5563', marginBottom: '2px' }}>Dekont / İşlem No: <span style={{ fontFamily: 'monospace', background: '#e5e7eb', padding: '2px 4px', borderRadius: '3px' }}>{ord.bankReceiptNo || 'Belirtilmemiş'}</span></p>
+                      <p style={{ fontSize: '0.8rem', color: '#4b5563', marginBottom: '2px' }}>Dekont / İşlem Hash No: <span style={{ fontFamily: 'monospace', background: '#e5e7eb', padding: '2px 4px', borderRadius: '3px' }}>{ord.bankReceiptNo || 'Belirtilmemiş'}</span></p>
                       <p style={{ fontSize: '0.8rem', color: '#4b5563', marginBottom: '6px' }}>Teslimat Adresi: <b>{ord.buyerAddress}</b></p>
                       <p style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#d97706', marginBottom: '8px' }}>Durum: {ord.statusText}</p>
                       {ord.status === 'shipping_expected' && (
@@ -703,7 +714,7 @@ export default function Home() {
               </div>
             </div>
 
-            <p style={{ fontSize: '0.85rem', color: '#4b5563', marginBottom: '20px' }}>Alıcıların yaptığı havaleler hesabınıza geçtiğinde <b>Dekont/İşlem No</b>'yu kontrol edip onaylayın. Onay sonrasında satıcıya gönderilecek net tutar ve IBAN bilgisi aşağıda listelenir.</p>
+            <p style={{ fontSize: '0.85rem', color: '#4b5563', marginBottom: '20px' }}>Alıcıların yaptığı havaleler veya kripto transferleri hesabınıza geçtiğinde <b>Dekont/İşlem Hash No</b>'yu kontrol edip onaylayın. Onay sonrasında satıcıya gönderilecek net tutar ve IBAN bilgisi aşağıda listelenir.</p>
 
             {orders.length === 0 ? (
               <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>Henüz bekleyen sipariş veya işlem yok.</p>
@@ -717,8 +728,9 @@ export default function Home() {
                         <h4 style={{ fontWeight: 'bold', fontSize: '1.05rem', color: '#1f2937' }}>{ord.artTitle}</h4>
                         <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1.05rem' }}>Satış: {ord.price}</span>
                       </div>
+                      <p style={{ fontSize: '0.85rem', color: '#1f2937', marginBottom: '2px' }}><b>Ödeme Yöntemi:</b> {ord.paymentMethod}</p>
                       <p style={{ fontSize: '0.85rem', color: '#1f2937', marginBottom: '2px' }}><b>Alıcı:</b> {ord.buyerFullName} ({ord.buyerPhone})</p>
-                      <p style={{ fontSize: '0.85rem', color: '#92400e', marginBottom: '2px', backgroundColor: '#fef3c7', padding: '4px 6px', borderRadius: '4px', display: 'inline-block' }}>🧾 <b>Dekont No:</b> {ord.bankReceiptNo || 'Belirtilmemiş'}</p>
+                      <p style={{ fontSize: '0.85rem', color: '#92400e', marginBottom: '2px', backgroundColor: '#fef3c7', padding: '4px 6px', borderRadius: '4px', display: 'inline-block' }}>🧾 <b>Dekont / Hash No:</b> {ord.bankReceiptNo || 'Belirtilmemiş'}</p>
                       
                       {/* KOMİSYON DAĞILIM DETAYI */}
                       <div style={{ backgroundColor: 'white', padding: '8px', borderRadius: '6px', border: '1px solid #e5e7eb', margin: '8px 0', fontSize: '0.8rem' }}>
@@ -760,7 +772,7 @@ export default function Home() {
                 <span style={{ fontSize: '0.75rem', backgroundColor: '#d1fae5', color: '#065f46', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold' }}>{selectedArt.isOriginal}</span>
               </div>
               <div style={{ display: 'flex', gap: '10px' }}>
-                <button onClick={() => { setSelectedArt(null); triggerBuyProcess(selectedArt); }} style={{ flex: 1, backgroundColor: '#10b981', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem' }}>Hemen Satın Al (Güvenli Havuz)</button>
+                <button onClick={() => { setSelectedArt(null); triggerBuyProcess(selectedArt); }} style={{ flex: 1, backgroundColor: '#10b981', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem' }}>Hemen Satın Al (Güvenli Havuz & Kripto)</button>
                 <button onClick={() => setSelectedArt(null)} style={{ backgroundColor: '#e5e7eb', color: '#374151', border: 'none', padding: '10px 14px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem' }}>Kapat</button>
               </div>
             </div>
@@ -768,35 +780,74 @@ export default function Home() {
         </div>
       )}
 
-      {/* ÖDEME, DEKONT VE ALICI BİLGİLERİ MODALI */}
+      {/* ÖDEME, QR KOD, KRİPTO VE ALICI BİLGİLERİ MODALI */}
       {showPaymentModal && pendingArtData && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px', zIndex: 60, overflowY: 'auto' }}>
-          <div style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '440px', width: '100%', padding: '24px', boxShadow: '0 10px 15px rgba(0,0,0,0.2)', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '4px', color: '#1f2937' }}>🏛️ Güvenli Havale & Dekont Bildirim Formu</h3>
-            <p style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: '14px' }}>Alınacak Eser: <b>{pendingArtData.title}</b> — <span style={{ color: '#059669', fontWeight: 'bold' }}>Ödenecek Tutar: {pendingArtData.price}</span></p>
+          <div style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '460px', width: '100%', padding: '24px', boxShadow: '0 10px 15px rgba(0,0,0,0.2)', maxHeight: '90vh', overflowY: 'auto' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '4px', color: '#1f2937' }}>🏛️ Güvenli Ödeme & Dekont/Hash Bildirim Formu</h3>
+            <p style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: '12px' }}>Alınacak Eser: <b>{pendingArtData.title}</b> — <span style={{ color: '#059669', fontWeight: 'bold' }}>Ödenecek Tutar: {pendingArtData.price}</span></p>
 
-            <div style={{ backgroundColor: '#f0fdf4', padding: '14px', borderRadius: '8px', border: '1px solid #bbf7d0', marginBottom: '16px', fontSize: '0.85rem' }}>
-              <p style={{ fontWeight: 'bold', color: '#166534', marginBottom: '6px' }}>Lütfen aşağıdaki site havuz hesabına tam tutarı gönderin:</p>
-              <p style={{ marginBottom: '3px' }}>Banka: <b>{escrowAccounts.bankName}</b></p>
-              <p style={{ marginBottom: '3px' }}>Alıcı Adı: <b>{escrowAccounts.accountHolder}</b></p>
-              <p style={{ fontFamily: 'monospace', fontSize: '0.95rem', fontWeight: 'bold', color: '#1f2937', marginTop: '6px', background: 'white', padding: '6px', borderRadius: '4px', border: '1px solid #d1d5db' }}>{escrowAccounts.tlIban}</p>
-              <p style={{ fontSize: '0.75rem', color: '#15803d', marginTop: '6px' }}>💡 Açıklama kısmına ürün adını yazmanız eşleşmeyi hızlandırır.</p>
+            {/* ÖDEME YÖNTEMİ SEÇİMİ */}
+            <div style={{ marginBottom: '14px' }}>
+              <label style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#374151', display: 'block', marginBottom: '6px' }}>Ödeme Yöntemi Seçin:</label>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button type="button" onClick={() => setPaymentType('bank')} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: paymentType === 'bank' ? '2px solid #4f46e5' : '1px solid #d1d5db', backgroundColor: paymentType === 'bank' ? '#eef2ff' : 'white', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}>🏦 Banka Havale/EFT</button>
+                <button type="button" onClick={() => setPaymentType('usdt')} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: paymentType === 'usdt' ? '2px solid #059669' : '1px solid #d1d5db', backgroundColor: paymentType === 'usdt' ? '#ecfdf5' : 'white', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}>🪙 USDT (BEP20)</button>
+                <button type="button" onClick={() => setPaymentType('btc')} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: paymentType === 'btc' ? '2px solid #d97706' : '1px solid #d1d5db', backgroundColor: paymentType === 'btc' ? '#fffbeb' : 'white', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}>₿ BTC (BEP20)</button>
+              </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
-              <p style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#1f2937', borderBottom: '1px solid #e5e7eb', paddingBottom: '4px' }}>📦 Teslimat ve Ödeme Dekont Bilgileri</p>
+            {/* SEÇİLEN ÖDEME DETAYLARI & QR KOD */}
+            {paymentType === 'bank' && (
+              <div style={{ backgroundColor: '#f0fdf4', padding: '12px', borderRadius: '8px', border: '1px solid #bbf7d0', marginBottom: '14px', fontSize: '0.82rem' }}>
+                <p style={{ fontWeight: 'bold', color: '#166534', marginBottom: '4px' }}>İş Bankası Havuz Hesabı:</p>
+                <p style={{ marginBottom: '2px' }}>Alıcı: <b>{escrowAccounts.accountHolder}</b></p>
+                <p style={{ fontFamily: 'monospace', fontSize: '0.9rem', fontWeight: 'bold', color: '#1f2937', margin: '4px 0', background: 'white', padding: '6px', borderRadius: '4px', border: '1px solid #d1d5db' }}>{escrowAccounts.tlIban}</p>
+                <p style={{ fontSize: '0.75rem', color: '#15803d' }}>💡 Açıklamaya ürün adını yazınız.</p>
+              </div>
+            )}
+
+            {(paymentType === 'usdt' || paymentType === 'btc') && (
+              <div style={{ backgroundColor: '#fdf8f6', padding: '12px', borderRadius: '8px', border: '1px solid #fed7aa', marginBottom: '14px', textAlign: 'center', fontSize: '0.82rem' }}>
+                <p style={{ fontWeight: 'bold', color: '#9a3412', marginBottom: '4px' }}>{paymentType === 'usdt' ? 'USDT' : 'Bitcoin (BTC)'} Yatırma Bilgileri ({escrowAccounts.cryptoNetwork}):</p>
+                
+                {/* Otomatik QR Kod Oluşturucu */}
+                <div style={{ margin: '8px 0', background: 'white', padding: '8px', display: 'inline-block', borderRadius: '6px', border: '1px solid #d1d5db' }}>
+                  <img 
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(paymentType === 'usdt' ? escrowAccounts.usdtWallet : escrowAccounts.btcWallet)}`} 
+                    alt="Cüzdan QR Kodu" 
+                    style={{ width: '130px', height: '130px', display: 'block' }}
+                  />
+                </div>
+
+                <p style={{ fontSize: '0.7rem', color: '#6b7280', marginBottom: '4px' }}>Cüzdan Adresi (Kopyalamak için dokunun):</p>
+                <div 
+                  onClick={() => {
+                    navigator.clipboard.writeText(paymentType === 'usdt' ? escrowAccounts.usdtWallet : escrowAccounts.btcWallet);
+                    alert('✅ Cüzdan adresi kopyalandı!');
+                  }}
+                  style={{ fontFamily: 'monospace', fontSize: '0.78rem', fontWeight: 'bold', color: '#1f2937', background: 'white', padding: '6px', borderRadius: '4px', border: '1px dashed #f97316', cursor: 'pointer', wordBreak: 'break-all' }}
+                >
+                  {paymentType === 'usdt' ? escrowAccounts.usdtWallet : escrowAccounts.btcWallet} 📋
+                </div>
+                <p style={{ fontSize: '0.72rem', color: '#c2410c', marginTop: '4px' }}>⚠️ Lütfen sadece belirtilen BSC (BEP20) ağını kullanın.</p>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '14px' }}>
+              <p style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#1f2937', borderBottom: '1px solid #e5e7eb', paddingBottom: '4px' }}>📦 Teslimat ve İşlem Onay Bilgileri</p>
               
               <input type="text" placeholder="Adınız ve Soyadınız" value={buyerFullName} onChange={(e) => setBuyerFullName(e.target.value)} required style={{ padding: '9px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.85rem' }} />
               
-              <input type="text" placeholder="İrtibat Telefon Numaranız (Örn: 05xx xxx xx xx)" value={buyerPhone} onChange={(e) => setBuyerPhone(e.target.value)} required style={{ padding: '9px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.85rem' }} />
+              <input type="text" placeholder="İrtibat Telefon Numaranız" value={buyerPhone} onChange={(e) => setBuyerPhone(e.target.value)} required style={{ padding: '9px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.85rem' }} />
               
-              <input type="text" placeholder="Banka İşlem Dekont / Referans Numarası (Zorunlu)" value={bankReceiptNo} onChange={(e) => setBankReceiptNo(e.target.value)} required style={{ padding: '9px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.85rem', backgroundColor: '#fffbeb' }} />
+              <input type="text" placeholder={paymentType === 'bank' ? "Banka Dekont / Referans Numarası (Zorunlu)" : "Kripto Transfer İşlem Hash (TxID) Numarası (Zorunlu)"} value={bankReceiptNo} onChange={(e) => setBankReceiptNo(e.target.value)} required style={{ padding: '9px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.85rem', backgroundColor: '#fffbeb' }} />
 
               <textarea placeholder="Ürünün Gönderileceği Açık Kargo Adresi (Mahalle, Cadde, No, İlçe/İl)" value={buyerAddress} onChange={(e) => setBuyerAddress(e.target.value)} rows={3} required style={{ padding: '9px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.85rem' }} />
 
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '4px', backgroundColor: '#f9fafb', padding: '10px', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '2px', backgroundColor: '#f9fafb', padding: '8px', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
                 <input type="checkbox" checked={havaleConfirmed} onChange={(e) => setHavaleConfirmed(e.target.checked)} />
-                <span style={{ fontSize: '0.8rem', color: '#374151', fontWeight: 'bold' }}>{pendingArtData.price} tutarındaki havaleyi yukarıdaki IBAN'a gerçekleştirdim ve dekont numarasını doğru girdim.</span>
+                <span style={{ fontSize: '0.78rem', color: '#374151', fontWeight: 'bold' }}>Ödemeyi seçtiğim yöntemle gerçekleştirdim ve dekont/hash numarasını doğru girdim.</span>
               </label>
             </div>
 
