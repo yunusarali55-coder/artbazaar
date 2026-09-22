@@ -164,11 +164,13 @@ export default function Home() {
     e.preventDefault();
     if (uploading) return;
 
+    // Ürün yüklemek için giriş zorunluluğu kontrolü
     if (!currentUser) {
       alert('❌ Eser yüklemek için önce giriş yapmalısınız!');
       setShowAuthModal(true);
       return;
     }
+
     if (!title.trim() || !price.trim() || !phone.trim() || !iban.trim() || !imageFile) {
       alert('❌ Lütfen tüm alanları, telefon ve gizli IBAN bilgilerini eksiksiz doldurun.');
       return;
@@ -240,7 +242,6 @@ export default function Home() {
     }
   };
 
-  // Satıcının kendi yüklediği eseri silmesi / vazgeçmesi
   const handleDeleteMyListing = async (artId) => {
     if (!confirm('❌ Bu eseri satıştan kaldırmak / vazgeçmek istediğinize emin misiniz?')) return;
 
@@ -279,11 +280,13 @@ export default function Home() {
           return;
         }
 
-        await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email: email.trim(),
           password: password,
           options: { data: { username: username.trim() } }
         });
+
+        if (error) throw error;
 
         const newUser = {
           id: `local-${Date.now()}`,
@@ -297,10 +300,12 @@ export default function Home() {
         setShowAuthModal(false);
         alert('✅ Kayıt başarılı ve oturum açıldı!');
       } else {
-        const { data } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email: email.trim(),
           password: password
         });
+
+        if (error) throw error;
 
         const loggedUser = {
           id: data?.user?.id || `user-${Date.now()}`,
@@ -314,16 +319,8 @@ export default function Home() {
         alert('✅ Giriş başarılı!');
       }
     } catch (err) {
-      const emergencyUser = {
-        id: `emergency-${Date.now()}`,
-        username: username.trim() || email.split('@')[0],
-        email: email.trim(),
-        isAdmin: email.trim() === ADMIN_EMAIL
-      };
-      setCurrentUser(emergencyUser);
-      localStorage.setItem('efnan_current_user', JSON.stringify(emergencyUser));
-      setShowAuthModal(false);
-      alert('✅ İşlem tamamlandı, oturum açıldı!');
+      // 🔒 Güvenlik: Hatalı şifre veya e-postada artık kullanıcıyı içeri almıyor, hata gösteriyor
+      alert('❌ Giriş başarısız: ' + (err.message || 'E-posta veya şifre hatalı.'));
     } finally {
       setAuthLoading(false);
     }
@@ -338,6 +335,13 @@ export default function Home() {
   };
 
   const triggerBuyProcess = (art) => {
+    // Satın almak için giriş kontrolü
+    if (!currentUser) {
+      alert('❌ Satın alma işlemi yapmak için önce giriş yapmalısınız!');
+      setShowAuthModal(true);
+      return;
+    }
+
     setPendingArtData(art);
     setBuyerFullName('');
     setBuyerPhone('');
@@ -399,9 +403,7 @@ export default function Home() {
     }, 1200);
   };
 
-  // 👑 1. Site Sahibi Ödemeyi Onayladığında: Vitrindeki Eser "SATILDI" Olarak İşaretlenir
   const adminApprovePayment = async (orderId, artId) => {
-    // Sipariş durumunu güncelle
     const updated = orders.map((order) => {
       if (order.id === orderId) {
         return {
@@ -415,7 +417,6 @@ export default function Home() {
     setOrders(updated);
     localStorage.setItem('efnan_orders', JSON.stringify(updated));
 
-    // Supabase'deki eserin durumunu 'Satıldı' olarak güncelle
     try {
       await supabase
         .from('artworks')
@@ -430,7 +431,6 @@ export default function Home() {
     alert('👑 Ödeme onaylandı! Eser vitrinde "SATILDI" olarak işaretlendi ve satın alma kapatıldı.');
   };
 
-  // 📦 2. Alıcı "Ürünü Teslim Aldım" Dediğinde: Ürün Siteden Tamamen Kaldırılır
   const confirmDelivery = async (orderId, artId) => {
     const updated = orders.map((order) => {
       if (order.id === orderId) {
@@ -445,7 +445,6 @@ export default function Home() {
     setOrders(updated);
     localStorage.setItem('efnan_orders', JSON.stringify(updated));
 
-    // Teslim edildiği için eseri veritabanından tamamen sil / kaldır
     if (artId) {
       try {
         await supabase
@@ -488,7 +487,10 @@ export default function Home() {
       {/* ÜST MENÜ SEKMELERİ */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', padding: '12px', backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', flexWrap: 'wrap' }}>
         <button onClick={() => setActiveTab('explore')} style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', backgroundColor: activeTab === 'explore' ? '#4f46e5' : '#e5e7eb', color: activeTab === 'explore' ? 'white' : '#374151', fontWeight: 'bold', cursor: 'pointer' }}>Antika & Eser Vitrini</button>
-        <button onClick={() => setActiveTab('my_orders')} style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', backgroundColor: activeTab === 'my_orders' ? '#4f46e5' : '#e5e7eb', color: activeTab === 'my_orders' ? 'white' : '#374151', fontWeight: 'bold', cursor: 'pointer' }}>Sipariş Takibi ({orders.length})</button>
+        
+        {currentUser && (
+          <button onClick={() => setActiveTab('my_orders')} style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', backgroundColor: activeTab === 'my_orders' ? '#4f46e5' : '#e5e7eb', color: activeTab === 'my_orders' ? 'white' : '#374151', fontWeight: 'bold', cursor: 'pointer' }}>Sipariş Takibi ({orders.length})</button>
+        )}
         
         {/* 👑 SADECE YÖNETİCİ (ADMIN) GÖREBİLİR */}
         {isAdmin && (
@@ -506,11 +508,12 @@ export default function Home() {
               <p style={{ fontSize: '0.9rem', maxWidth: '600px', margin: '0 auto', color: '#d1d5db' }}>Müzelik antikalar, orijinal yağlı boya tablolar ve tarihi objeler güvenli havuz koruması altında burada buluşuyor.</p>
             </section>
 
+            {/* VİTRİN - HERKES GÖREBİLİR (Giriş zorunluluğu yok) */}
             <section style={{ marginBottom: '40px' }}>
               <h2 style={{ fontSize: '1.2rem', marginBottom: '14px', color: '#111827' }}>Vitrendeki Tarihi Eserler ve Tablolar</h2>
               {listings.length === 0 ? (
                 <div style={{ backgroundColor: 'white', padding: '30px', textAlign: 'center', borderRadius: '8px', color: '#6b7280' }}>
-                  Henüz vitrinde kayıtlı bir eser bulunmuyor. Aşağıdan ilk eseri siz ekleyin.
+                  Henüz vitrinde kayıtlı bir eser bulunmuyor. Eser eklemek için giriş yapabilirsiniz.
                 </div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
@@ -521,7 +524,6 @@ export default function Home() {
                     return (
                       <div key={art.id} onClick={() => !isSold && setSelectedArt(art)} style={{ backgroundColor: 'white', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 2px 5px rgba(0,0,0,0.08)', cursor: isSold ? 'default' : 'pointer', border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', opacity: isSold ? 0.75 : 1, position: 'relative' }}>
                         
-                        {/* SATILDI ETİKETİ */}
                         {isSold && (
                           <div style={{ position: 'absolute', top: '10px', right: '10px', backgroundColor: '#dc2626', color: 'white', padding: '4px 10px', borderRadius: '6px', fontWeight: 'bold', fontSize: '0.8rem', zIndex: 2, boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
                             🔴 SATILDI
@@ -544,7 +546,6 @@ export default function Home() {
                             <span style={{ fontWeight: 'bold', color: isSold ? '#9ca3af' : '#059669', fontSize: '1.1rem' }}>{art.price}</span>
                             
                             <div style={{ display: 'flex', gap: '6px' }}>
-                              {/* EĞER İLAN KULLANICININ KENDİ İLANIYSA SİLME/VAZGEÇME BUTONU */}
                               {isMyListing && (
                                 <button onClick={(e) => { e.stopPropagation(); handleDeleteMyListing(art.id); }} style={{ backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '6px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}>
                                   🗑️ Vazgeç / Kaldır
@@ -566,9 +567,19 @@ export default function Home() {
               )}
             </section>
 
-            <section style={{ maxWidth: '600px', margin: '0 auto', backgroundColor: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 6px rgba(0,0,0,0.08)' }}>
+            {/* ÜRÜN YÜKLEME FORMU - Giriş Yapılmamışsa Uyarı Verir / Giriş İster */}
+            <section style={{ maxWidth: '600px', margin: '0 auto', backgroundColor: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 6px rgba(0,0,0,0.08)', position: 'relative' }}>
+              
+              {!currentUser && (
+                <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(255,255,255,0.85)', zIndex: 5, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '20px', textAlign: 'center', borderRadius: '12px' }}>
+                  <p style={{ fontWeight: 'bold', color: '#1f2937', fontSize: '1.05rem', marginBottom: '10px' }}>🔒 Eser Yüklemek İçin Giriş Yapmalısınız</p>
+                  <p style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '16px' }}>Kendi antika ve tarihi eserlerinizi güvenli vitrine eklemek için lütfen hesabınıza giriş yapın.</p>
+                  <button onClick={() => setShowAuthModal(true)} style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '6px', fontWeight: 'bold', fontSize: '0.9rem', cursor: 'pointer' }}>Giriş Yap / Kayıt Ol</button>
+                </div>
+              )}
+
               <h2 style={{ fontSize: '1.2rem', marginBottom: '6px', color: '#111827' }}>Antika veya Tarihi Eser İlanı Yükle</h2>
-              <p style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: '16px' }}>Telefon ve IBAN numaralarınız alıcılara kesinlikle gösterilmez, işlemler havuz sistemiyle yapılır. İstediğiniz zaman kendi ilanınızı kaldırabilirsiniz.</p>
+              <p style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: '16px' }}>Telefon ve IBAN numaralarınız alıcılara kesinlikle gösterilmez, işlemler havuz sistemiyle yapılır.</p>
               
               <form onSubmit={triggerListingProcess} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <input type="text" placeholder="Eser / Antika Adı" value={title} onChange={(e) => setTitle(e.target.value)} required style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.9rem' }} />
@@ -623,7 +634,7 @@ export default function Home() {
           </>
         )}
 
-        {activeTab === 'my_orders' && (
+        {activeTab === 'my_orders' && currentUser && (
           <section style={{ maxWidth: '700px', margin: '0 auto', backgroundColor: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 6px rgba(0,0,0,0.08)' }}>
             <h2 style={{ fontSize: '1.2rem', marginBottom: '16px', color: '#111827' }}>Siparişlerim ve Ödeme Takibi</h2>
             {orders.length === 0 ? (
@@ -659,7 +670,7 @@ export default function Home() {
               <h2 style={{ fontSize: '1.2rem', color: '#92400e', fontWeight: 'bold' }}>👑 Site Sahibi Ödeme Onay Paneli (Yunus Aralı)</h2>
               <span style={{ fontSize: '0.8rem', backgroundColor: '#fef3c7', color: '#b45309', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold' }}>Banka Hesabı: İş Bankası</span>
             </div>
-            <p style={{ fontSize: '0.85rem', color: '#4b5563', marginBottom: '20px' }}>Alıcıların yaptığı havaleler banka hesabınıza geçtiğinde buradan <b>"Ödemeyi Onayla"</b> butonuna basarak paranın kesinleşmesini sağlayabilir, eserin vitrinde <b>"SATILDI"</b> olarak işaretlenmesini tetikleyebilirsiniz.</p>
+            <p style={{ fontSize: '0.85rem', color: '#4b5563', marginBottom: '20px' }}>Alıcıların yaptığı havaleler banka hesabınıza geçtiğinde buradan <b>"Ödemeyi Onayla"</b> butonuna basarak eserin vitrinde <b>"SATILDI"</b> olarak işaretlenmesini sağlayabilirsiniz.</p>
 
             {orders.length === 0 ? (
               <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>Henüz bekleyen ödeme bildirimi yok.</p>
@@ -723,7 +734,6 @@ export default function Home() {
             <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '4px', color: '#1f2937' }}>🏛️ Güvenli Havale & Teslimat Formu</h3>
             <p style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: '14px' }}>Alınacak Eser: <b>{pendingArtData.title}</b> — <span style={{ color: '#059669', fontWeight: 'bold' }}>Ödenecek Tutar: {pendingArtData.price}</span></p>
 
-            {/* BANKA BİLGİLERİ VE NET TUTAR */}
             <div style={{ backgroundColor: '#f0fdf4', padding: '14px', borderRadius: '8px', border: '1px solid #bbf7d0', marginBottom: '16px', fontSize: '0.85rem' }}>
               <p style={{ fontWeight: 'bold', color: '#166534', marginBottom: '6px' }}>Lütfen aşağıdaki site havuz hesabına tam tutarı gönderin:</p>
               <p style={{ marginBottom: '3px' }}>Banka: <b>{escrowAccounts.bankName}</b></p>
@@ -732,7 +742,6 @@ export default function Home() {
               <p style={{ fontSize: '0.75rem', color: '#15803d', marginTop: '6px' }}>💡 Açıklama kısmına ürün adını yazabilirsiniz.</p>
             </div>
 
-            {/* ALICI TESLİMAT BİLGİLERİ */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
               <p style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#1f2937', borderBottom: '1px solid #e5e7eb', paddingBottom: '4px' }}>📦 Ürünün Teslim Edileceği Adres ve İletişim Bilgileri</p>
               
