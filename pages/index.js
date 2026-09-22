@@ -40,6 +40,15 @@ export default function Home() {
   const [pendingArtData, setPendingArtData] = useState(null);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
 
+  // Düzenleme Modali State'leri
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingArt, setEditingArt] = useState(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editPrice, setEditPrice] = useState('');
+  const [editIsOriginal, setEditIsOriginal] = useState('Orijinal');
+  const [editLoading, setEditLoading] = useState(false);
+
   // Alıcı Teslimat, Ödeme Yöntemi ve Dekont Bilgileri
   const [buyerFullName, setBuyerFullName] = useState('');
   const [buyerPhone, setBuyerPhone] = useState('');
@@ -265,6 +274,62 @@ export default function Home() {
       alert('✅ Eser vitrinden başarıyla kaldırıldı.');
     } catch (err) {
       alert('❌ İşlem başarısız.');
+    }
+  };
+
+  const openEditModal = (art) => {
+    setEditingArt(art);
+    setEditTitle(art.title);
+    setEditDescription(art.description);
+    setEditPrice(art.rawPrice ? art.rawPrice.toString() : '');
+    setEditIsOriginal(art.isOriginal || 'Orijinal');
+    setSelectedArt(null);
+    setShowEditModal(true);
+  };
+
+  const handleUpdateArtwork = async (e) => {
+    e.preventDefault();
+    if (!editingArt) return;
+    if (!editTitle.trim() || !editPrice.trim()) {
+      alert('❌ Başlık ve fiyat alanları boş bırakılamaz.');
+      return;
+    }
+
+    setEditLoading(true);
+    try {
+      const { error } = await supabase
+        .from('artworks')
+        .update({
+          title: editTitle.trim(),
+          description: editDescription.trim(),
+          price: parseFloat(editPrice) || 0,
+          is_original: editIsOriginal
+        })
+        .eq('id', editingArt.id);
+
+      if (error) throw error;
+
+      setShowEditModal(false);
+      setEditingArt(null);
+      await fetchArtworksFromSupabase();
+      alert('✅ Eser bilgileri başarıyla güncellendi!');
+    } catch (err) {
+      alert('❌ Güncelleme hatası: ' + err.message);
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleShareArtwork = (art) => {
+    if (typeof window === 'undefined') return;
+    const currentUrl = window.location.href.split('?')[0];
+    const shareText = `🏛️ Efnan Antika & Sanat Vitrini\n\n🔍 Eser: ${art.title}\n💰 Fiyat: ${art.price}\n📜 Durum: ${art.isOriginal}\n\nBu eşsiz tarihi eseri buradan inceleyip güvenle satın alabilirsin:\n👉 ${currentUrl}`;
+
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(shareText);
+      alert('✅ Ürün paylaşım metni ve site adresi panoya kopyalandı! İstediğiniz kişiye (WhatsApp, Mesaj vb.) yapıştırıp gönderebilirsiniz.');
+    } else {
+      prompt('Paylaşım Bağlantısı ve Metni:', shareText);
     }
   };
 
@@ -542,8 +607,7 @@ export default function Home() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
                   {listings.map((art) => {
                     const isSold = art.status === 'Satıldı';
-                    // Sadece ürünü yükleyen kişi VEYA site sahibi (admin) silebilir
-                    const canDelete = currentUser && (currentUser.email === art.user_email || isAdmin);
+                    const canManage = currentUser && (currentUser.email === art.user_email || isAdmin);
 
                     return (
                       <div key={art.id} onClick={() => !isSold && setSelectedArt(art)} style={{ backgroundColor: 'white', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 2px 5px rgba(0,0,0,0.08)', cursor: isSold ? 'default' : 'pointer', border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', opacity: isSold ? 0.75 : 1, position: 'relative' }}>
@@ -566,20 +630,26 @@ export default function Home() {
                             <h3 style={{ fontSize: '1rem', fontWeight: 'bold', margin: '8px 0 4px 0', color: '#1f2937' }}>{art.title}</h3>
                           </div>
                           
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', borderTop: '1px solid #f3f4f6', paddingTop: '10px', flexWrap: 'wrap', gap: '6px' }}>
-                            <span style={{ fontWeight: 'bold', color: isSold ? '#9ca3af' : '#059669', fontSize: '1.05rem' }}>{art.price}</span>
+                          <div style={{ marginTop: '10px', borderTop: '1px solid #f3f4f6', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ fontWeight: 'bold', color: isSold ? '#9ca3af' : '#059669', fontSize: '1.05rem' }}>{art.price}</span>
+                              <button onClick={(e) => { e.stopPropagation(); handleShareArtwork(art); }} style={{ backgroundColor: '#e0e7ff', color: '#3730a3', border: 'none', padding: '4px 8px', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 'bold', cursor: 'pointer' }}>🔗 Paylaş</button>
+                            </div>
                             
-                            <div style={{ display: 'flex', gap: '6px' }}>
-                              {canDelete && (
-                                <button onClick={(e) => { e.stopPropagation(); handleDeleteMyListing(art.id); }} style={{ backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '5px 8px', borderRadius: '6px', fontSize: '0.72rem', fontWeight: 'bold', cursor: 'pointer' }}>
-                                  🗑️ Kaldır
-                                </button>
+                            <div style={{ display: 'flex', gap: '6px', width: '100%', flexWrap: 'wrap' }}>
+                              {canManage && (
+                                <>
+                                  <button onClick={(e) => { e.stopPropagation(); openEditModal(art); }} style={{ flex: 1, backgroundColor: '#d97706', color: 'white', border: 'none', padding: '7px 6px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer', textAlign: 'center' }}>
+                                    ✏️ Düzenle
+                                  </button>
+                                  <button onClick={(e) => { e.stopPropagation(); handleDeleteMyListing(art.id); }} style={{ flex: 1, backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '7px 6px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer', textAlign: 'center' }}>
+                                    🗑️ Kaldır
+                                  </button>
+                                </>
                               )}
 
-                              {!isSold ? (
-                                <button onClick={(e) => { e.stopPropagation(); setSelectedArt(art); }} style={{ backgroundColor: '#4f46e5', color: 'white', border: 'none', padding: '6px 10px', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 'bold', cursor: 'pointer' }}>İncele & Al</button>
-                              ) : (
-                                <span style={{ fontSize: '0.75rem', color: '#dc2626', fontWeight: 'bold' }}>Satıldı</span>
+                              {!isSold && (
+                                <button onClick={(e) => { e.stopPropagation(); setSelectedArt(art); }} style={{ flex: canManage ? '100%' : 1, backgroundColor: '#4f46e5', color: 'white', border: 'none', padding: '7px 10px', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 'bold', cursor: 'pointer', textAlign: 'center' }}>İncele & Al</button>
                               )}
                             </div>
                           </div>
@@ -758,7 +828,10 @@ export default function Home() {
               <img src={selectedArt.image} alt={selectedArt.title} style={{ width: '100%', height: '200px', objectFit: 'cover' }} />
             )}
             <div style={{ padding: '16px' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '4px', color: '#1f2937' }}>{selectedArt.title}</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '4px', color: '#1f2937' }}>{selectedArt.title}</h3>
+                <button onClick={() => handleShareArtwork(selectedArt)} style={{ backgroundColor: '#e0e7ff', color: '#3730a3', border: 'none', padding: '5px 8px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}>🔗 Paylaş</button>
+              </div>
               <p style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: '4px' }}>Koleksiyon Sahibi: {selectedArt.artist}</p>
               <p style={{ fontSize: '0.8rem', color: '#ef4444', fontWeight: 'bold', marginBottom: '6px' }}>Satıcı İletişimi: Gizli (Güvenli Havuzda)</p>
               <p style={{ fontSize: '0.82rem', color: '#4b5563', marginBottom: '14px', lineHeight: '1.4' }}>{selectedArt.description}</p>
@@ -769,14 +842,61 @@ export default function Home() {
               
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 {currentUser && (currentUser.email === selectedArt.user_email || isAdmin) && (
-                  <button onClick={() => handleDeleteMyListing(selectedArt.id)} style={{ backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '10px 12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>
-                    🗑️ Vitrinden Kaldır
-                  </button>
+                  <>
+                    <button onClick={() => openEditModal(selectedArt)} style={{ backgroundColor: '#d97706', color: 'white', border: 'none', padding: '10px 12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.82rem' }}>
+                      ✏️ Düzenle
+                    </button>
+                    <button onClick={() => handleDeleteMyListing(selectedArt.id)} style={{ backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '10px 12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.82rem' }}>
+                      🗑️ Kaldır
+                    </button>
+                  </>
                 )}
                 <button onClick={() => { setSelectedArt(null); triggerBuyProcess(selectedArt); }} style={{ flex: 1, backgroundColor: '#10b981', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>Hemen Satın Al</button>
                 <button onClick={() => setSelectedArt(null)} style={{ backgroundColor: '#e5e7eb', color: '#374151', border: 'none', padding: '10px 12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>Kapat</button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ÜRÜN DÜZENLEME MODALI */}
+      {showEditModal && editingArt && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '12px', zIndex: 65, boxSizing: 'border-box' }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '400px', width: '100%', padding: '20px 16px', boxShadow: '0 10px 15px rgba(0,0,0,0.2)', boxSizing: 'border-box' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '12px', color: '#1f2937' }}>✏️ Eser Bilgilerini Düzenle</h3>
+            
+            <form onSubmit={handleUpdateArtwork} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div>
+                <label style={{ fontSize: '0.72rem', color: '#4b5563', display: 'block', marginBottom: '3px' }}>Eser Adı:</label>
+                <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required style={{ width: '100%', padding: '9px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.88rem', boxSizing: 'border-box' }} />
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: '0.72rem', color: '#4b5563', display: 'block', marginBottom: '3px' }}>Durum:</label>
+                  <select value={editIsOriginal} onChange={(e) => setEditIsOriginal(e.target.value)} style={{ width: '100%', padding: '9px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: 'white', fontSize: '0.85rem', boxSizing: 'border-box' }}>
+                    <option value="Orijinal">Orijinal Tarihi Eser</option>
+                    <option value="Antika / Dönem Parçası">Antika / Dönem Parçası</option>
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: '0.72rem', color: '#4b5563', display: 'block', marginBottom: '3px' }}>Fiyat (₺):</label>
+                  <input type="number" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} required style={{ width: '100%', padding: '9px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.88rem', boxSizing: 'border-box' }} />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: '0.72rem', color: '#4b5563', display: 'block', marginBottom: '3px' }}>Açıklama:</label>
+                <textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} rows={3} style={{ width: '100%', padding: '9px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.88rem', boxSizing: 'border-box' }} />
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                <button type="submit" disabled={editLoading} style={{ flex: 1, backgroundColor: editLoading ? '#9ca3af' : '#d97706', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold', fontSize: '0.85rem', cursor: editLoading ? 'not-allowed' : 'pointer' }}>
+                  {editLoading ? 'Güncelleniyor...' : 'Değişiklikleri Kaydet'}
+                </button>
+                <button type="button" onClick={() => { setShowEditModal(false); setEditingArt(null); }} style={{ backgroundColor: '#e5e7eb', color: '#374151', border: 'none', padding: '10px 12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>İptal</button>
+              </div>
+            </form>
           </div>
         </div>
       )}
