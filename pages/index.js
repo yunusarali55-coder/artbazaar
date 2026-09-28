@@ -23,7 +23,7 @@ export default function Home() {
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [isOriginal, setIsOriginal] = useState('Orijinal');
+  const [isOriginal, setIsOriginal] = useState('Mobilya'); // Varsayılan Kategori
   const [price, setPrice] = useState('');
   const [phone, setPhone] = useState('');
   const [iban, setIban] = useState('');
@@ -46,7 +46,7 @@ export default function Home() {
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editPrice, setEditPrice] = useState('');
-  const [editIsOriginal, setEditIsOriginal] = useState('Orijinal');
+  const [editIsOriginal, setEditIsOriginal] = useState('Mobilya');
   const [editLoading, setEditLoading] = useState(false);
 
   // Alıcı Teslimat, Ödeme Yöntemi ve Dekont Bilgileri
@@ -59,7 +59,7 @@ export default function Home() {
 
   const [orders, setOrders] = useState([]);
   const [activeTab, setActiveTab] = useState('explore');
-  const [selectedCategory, setSelectedCategory] = useState('Tümü'); // 🌟 Yeni Kategori Filtresi
+  const [selectedCategory, setSelectedCategory] = useState('Tümü'); // 🌟 Kategori Sekmeleri State'i
 
   const escrowAccounts = {
     bankName: 'Türkiye İş Bankası',
@@ -73,6 +73,9 @@ export default function Home() {
   const [listings, setListings] = useState([]);
 
   const isAdmin = currentUser && (currentUser.email === ADMIN_EMAIL || currentUser.isAdmin === true);
+
+  // 🌟 Profesyonel Müzayede/E-Ticaret Kategorileri Listesi
+  const CATEGORIES = ['Tümü', 'Mobilya', 'Aydınlatma', 'Dekorasyon', 'Numismatik', 'Tablo', 'Antika / Diğer'];
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -113,7 +116,7 @@ export default function Home() {
         id: art.id,
         title: art.title || 'Tarihi Eser',
         description: art.description || 'Açıklama yok',
-        isOriginal: art.is_original || 'Orijinal',
+        isOriginal: art.is_original || 'Antika / Diğer',
         artist: art.artist || 'Koleksiyoner',
         user_email: art.user_email || '',
         phone: art.phone || 'Gizli',
@@ -283,7 +286,7 @@ export default function Home() {
     setEditTitle(art.title);
     setEditDescription(art.description);
     setEditPrice(art.rawPrice ? art.rawPrice.toString() : '');
-    setEditIsOriginal(art.isOriginal || 'Orijinal');
+    setEditIsOriginal(art.isOriginal || 'Mobilya');
     setSelectedArt(null);
     setShowEditModal(true);
   };
@@ -324,11 +327,11 @@ export default function Home() {
   const handleShareArtwork = (art) => {
     if (typeof window === 'undefined') return;
     const currentUrl = window.location.href.split('?')[0];
-    const shareText = `🏛️ Efnan Antika & Sanat Vitrini\n\n🔍 Eser: ${art.title}\n💰 Fiyat: ${art.price}\n📜 Durum: ${art.isOriginal}\n\nBu eşsiz tarihi eseri buradan inceleyip güvenle satın alabilirsin:\n👉 ${currentUrl}`;
+    const shareText = `🏛️ Efnan ArtBazaar & Antika Vitrini\n\n🔍 Eser: ${art.title}\n💰 Fiyat: ${art.price}\n📜 Kategori: ${art.isOriginal}\n\nBu eşsiz parçayı buradan inceleyip güvenle satın alabilirsin:\n👉 ${currentUrl}`;
 
     if (navigator.clipboard) {
       navigator.clipboard.writeText(shareText);
-      alert('✅ Ürün paylaşım metni ve site adresi panoya kopyalandı! İstediğiniz kişiye (WhatsApp, Mesaj vb.) yapıştırıp gönderebilirsiniz.');
+      alert('✅ Ürün paylaşım metni ve site adresi panoya kopyalandı! İstediğiniz kişiye (WhatsApp vb.) yapıştırıp gönderebilirsiniz.');
     } else {
       prompt('Paylaşım Bağlantısı ve Metni:', shareText);
     }
@@ -562,91 +565,90 @@ export default function Home() {
   return (
     <div style={{ width: '100%', minHeight: '100vh', backgroundColor: '#f3f4f6', fontFamily: 'Arial, sans-serif', margin: 0, padding: 0, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', overflowX: 'hidden' }}>
       <Head>
-        <title>Efnan Antika & Tarihi Eser Pazarı</title>
+        <title>Efnan ArtBazaar & Antika Koleksiyonu</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
       </Head>
 
-      {/* 🌟 PROFESYONEL ÜST MENÜ (NAVBAR) */}
-      <nav style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', position: 'sticky', top: 0, zIndex: 10, boxSizing: 'border-box' }}>
-        <div onClick={() => window.location.reload()} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '1.2rem' }}>🏛️</span>
+      {/* 🌟 PROFESYONEL ÜST MENÜ BARı (NAVBAR) */}
+      <nav style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', position: 'sticky', top: 0, zIndex: 10, boxSizing: 'border-box', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+        <div onClick={() => window.location.reload()} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '1.4rem' }}>🏛️</span>
           <div>
-            <span style={{ fontWeight: '900', fontSize: '1.05rem', color: '#1f2937', display: 'block', letterSpacing: '0.5px' }}>EFNAN</span>
-            <span style={{ fontSize: '0.62rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '1px' }}>Antika & Sanat Vitrini</span>
+            <span style={{ fontWeight: '900', fontSize: '1.15rem', color: '#1f2937', display: 'block', letterSpacing: '0.5px' }}>EFNAN ARTBAZAAR</span>
+            <span style={{ fontSize: '0.65rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '1px' }}>Antika, Mobilya & Sanat Müzayedesi</span>
           </div>
           {isAdmin && <span style={{ fontSize: '0.65rem', backgroundColor: '#d97706', color: 'white', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>Yönetici</span>}
         </div>
 
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           {currentUser ? (
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', backgroundColor: '#f9fafb', padding: '4px 10px', borderRadius: '20px', border: '1px solid #e5e7eb' }}>
-              <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#374151' }}>👤 {currentUser.username}</span>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', backgroundColor: '#f9fafb', padding: '5px 12px', borderRadius: '20px', border: '1px solid #e5e7eb' }}>
+              <span style={{ fontSize: '0.82rem', fontWeight: 'bold', color: '#374151' }}>👤 {currentUser.username}</span>
               <button onClick={handleLogout} style={{ backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem', cursor: 'pointer', fontWeight: 'bold' }}>Çıkış</button>
             </div>
           ) : (
-            <button onClick={() => setShowAuthModal(true)} style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)' }}>Giriş / Kayıt</button>
+            <button onClick={() => setShowAuthModal(true)} style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '7px 16px', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)' }}>Giriş / Kayıt</button>
           )}
         </div>
       </nav>
 
-      {/* 🌟 SEKME VE KATEGORİ SEÇİM ÇUBUĞU */}
-      <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', flexWrap: 'wrap', gap: '8px', boxSizing: 'border-box' }}>
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-          <button onClick={() => setActiveTab('explore')} style={{ padding: '7px 14px', borderRadius: '6px', border: 'none', backgroundColor: activeTab === 'explore' ? '#4f46e5' : '#f3f4f6', color: activeTab === 'explore' ? 'white' : '#374151', fontWeight: 'bold', fontSize: '0.82rem', cursor: 'pointer' }}>🏛️ Antika Vitrini</button>
-          
-          {currentUser && (
-            <button onClick={() => setActiveTab('my_orders')} style={{ padding: '7px 14px', borderRadius: '6px', border: 'none', backgroundColor: activeTab === 'my_orders' ? '#4f46e5' : '#f3f4f6', color: activeTab === 'my_orders' ? 'white' : '#374151', fontWeight: 'bold', fontSize: '0.82rem', cursor: 'pointer' }}>📦 Siparişlerim ({orders.length})</button>
-          )}
-          
-          {isAdmin && (
-            <button onClick={() => setActiveTab('admin_panel')} style={{ padding: '7px 14px', borderRadius: '6px', border: '1px dashed #b45309', backgroundColor: activeTab === 'admin_panel' ? '#d97706' : '#fef3c7', color: activeTab === 'admin_panel' ? 'white' : '#92400e', fontWeight: 'bold', fontSize: '0.82rem', cursor: 'pointer' }}>
-              👑 Yönetici Paneli {pendingApprovalsCount > 0 && `(${pendingApprovalsCount})`}
+      {/* 🌟 KATEGORİ SEKME ÇUBUĞU (Mobilya, Aydınlatma, Dekorasyon, Numismatik, Tablo...) */}
+      <div style={{ width: '100%', backgroundColor: '#1f2937', padding: '10px 16px', display: 'flex', justifyContent: 'center', alignItems: 'center', overflowX: 'auto', boxSizing: 'border-box' }}>
+        <div style={{ display: 'flex', gap: '8px', minWidth: 'max-content' }}>
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => { setSelectedCategory(cat); setActiveTab('explore'); }}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '20px',
+                border: 'none',
+                backgroundColor: selectedCategory === cat ? '#4f46e5' : 'rgba(255,255,255,0.1)',
+                color: selectedCategory === cat ? 'white' : '#d1d5db',
+                fontSize: '0.8rem',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              {cat === 'Tümü' ? '🌟 Tüm Eserler' : cat}
             </button>
-          )}
+          ))}
         </div>
+      </div>
 
-        {/* 🌟 KATEGORİ FİLTRELEME BUTONLARI (Sadece Vitrin Sekmesindeyken Görünür) */}
-        {activeTab === 'explore' && (
-          <div style={{ display: 'flex', gap: '4px', background: '#f9fafb', padding: '3px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-            {['Tümü', 'Orijinal', 'Antika / Dönem Parçası'].map((cat) => (
-              <button 
-                key={cat} 
-                onClick={() => setSelectedCategory(cat)}
-                style={{ 
-                  padding: '5px 10px', 
-                  borderRadius: '6px', 
-                  border: 'none', 
-                  backgroundColor: selectedCategory === cat ? '#1f2937' : 'transparent', 
-                  color: selectedCategory === cat ? 'white' : '#4b5563', 
-                  fontSize: '0.75rem', 
-                  fontWeight: 'bold', 
-                  cursor: 'pointer' 
-                }}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+      {/* SAYFA SEKMELERİ (Vitrin, Siparişlerim, Yönetici Paneli) */}
+      <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '10px 16px', backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', gap: '10px', boxSizing: 'border-box' }}>
+        <button onClick={() => setActiveTab('explore')} style={{ padding: '7px 16px', borderRadius: '6px', border: 'none', backgroundColor: activeTab === 'explore' ? '#1f2937' : '#f3f4f6', color: activeTab === 'explore' ? 'white' : '#374151', fontWeight: 'bold', fontSize: '0.82rem', cursor: 'pointer' }}>🏛️ Vitrin</button>
+        
+        {currentUser && (
+          <button onClick={() => setActiveTab('my_orders')} style={{ padding: '7px 16px', borderRadius: '6px', border: 'none', backgroundColor: activeTab === 'my_orders' ? '#1f2937' : '#f3f4f6', color: activeTab === 'my_orders' ? 'white' : '#374151', fontWeight: 'bold', fontSize: '0.82rem', cursor: 'pointer' }}>📦 Siparişlerim ({orders.length})</button>
+        )}
+        
+        {isAdmin && (
+          <button onClick={() => setActiveTab('admin_panel')} style={{ padding: '7px 16px', borderRadius: '6px', border: '1px dashed #b45309', backgroundColor: activeTab === 'admin_panel' ? '#d97706' : '#fef3c7', color: activeTab === 'admin_panel' ? 'white' : '#92400e', fontWeight: 'bold', fontSize: '0.82rem', cursor: 'pointer' }}>
+            👑 Yönetici Paneli {pendingApprovalsCount > 0 && `(${pendingApprovalsCount})`}
+          </button>
         )}
       </div>
 
       <main style={{ width: '100%', maxWidth: '1000px', margin: '0 auto', padding: '20px 12px', flex: 1, boxSizing: 'border-box' }}>
         {activeTab === 'explore' && (
           <>
-            <section style={{ backgroundColor: '#1f2937', color: 'white', padding: '24px 16px', borderRadius: '12px', marginBottom: '24px', textAlign: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', boxSizing: 'border-box' }}>
-              <h1 style={{ fontSize: '1.4rem', fontWeight: 'bold', marginBottom: '6px' }}>Efnan Antika ve Tarihi Eser Koleksiyonu</h1>
-              <p style={{ fontSize: '0.85rem', maxWidth: '600px', margin: '0 auto', color: '#d1d5db', lineHeight: '1.4' }}>Müzelik antikalar, orijinal yağlı boya tablolar, tarihi objeler ve güvenli havuz/kripto ödeme seçenekleri burada buluşuyor.</p>
+            <section style={{ backgroundColor: '#111827', color: 'white', padding: '24px 16px', borderRadius: '12px', marginBottom: '24px', textAlign: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', boxSizing: 'border-box' }}>
+              <h1 style={{ fontSize: '1.4rem', fontWeight: 'bold', marginBottom: '6px' }}>Efnan Antika, Mobilya ve Sanat Koleksiyonu</h1>
+              <p style={{ fontSize: '0.85rem', maxWidth: '600px', margin: '0 auto', color: '#d1d5db', lineHeight: '1.4' }}>Dönem mobilyaları, antika aydınlatmalar, dekoratif objeler, numismatik paralar, orijinal tablolar ve güvenli escrow/kripto ödeme seçenekleri burada.</p>
             </section>
 
             <section style={{ marginBottom: '30px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                 <h2 style={{ fontSize: '1.1rem', color: '#111827', fontWeight: 'bold' }}>Vitrendeki Eserler ({filteredListings.length})</h2>
-                <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>Aktif Kategori: <b>{selectedCategory}</b></span>
+                <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>Aktif Kategori: <b style={{ color: '#4f46e5' }}>{selectedCategory}</b></span>
               </div>
 
               {filteredListings.length === 0 ? (
-                <div style={{ backgroundColor: 'white', padding: '30px', textAlign: 'center', borderRadius: '8px', color: '#6b7280', fontSize: '0.9rem', border: '1px solid #e5e7eb' }}>
-                  Bu kategoride henüz kayıtlı bir eser bulunmuyor.
+                <div style={{ backgroundColor: 'white', padding: '40px', textAlign: 'center', borderRadius: '8px', color: '#6b7280', fontSize: '0.9rem', border: '1px solid #e5e7eb' }}>
+                  Bu kategoride henüz kayıtlı bir eser veya ürün bulunmuyor. İlk ilanı siz ekleyebilirsiniz!
                 </div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
@@ -669,7 +671,7 @@ export default function Home() {
                         <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'space-between' }}>
                           <div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <span style={{ fontSize: '0.7rem', backgroundColor: '#d1fae5', color: '#065f46', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>{art.isOriginal}</span>
+                              <span style={{ fontSize: '0.7rem', backgroundColor: '#eef2ff', color: '#4f46e5', padding: '2px 8px', borderRadius: '4px', fontWeight: 'bold' }}>{art.isOriginal}</span>
                               <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>Satıcı: {art.artist}</span>
                             </div>
                             <h3 style={{ fontSize: '1rem', fontWeight: 'bold', margin: '8px 0 4px 0', color: '#1f2937' }}>{art.title}</h3>
@@ -711,23 +713,27 @@ export default function Home() {
               {!currentUser && (
                 <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(255,255,255,0.9)', zIndex: 5, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '20px', textAlign: 'center', borderRadius: '12px', boxSizing: 'border-box' }}>
                   <p style={{ fontWeight: 'bold', color: '#1f2937', fontSize: '1rem', marginBottom: '8px' }}>🔒 Eser Yüklemek İçin Giriş Yapmalısınız</p>
-                  <p style={{ fontSize: '0.82rem', color: '#6b7280', marginBottom: '14px' }}>Kendi antika ve tarihi eserlerinizi güvenli vitrine eklemek için lütfen hesabınıza giriş yapın.</p>
+                  <p style={{ fontSize: '0.82rem', color: '#6b7280', marginBottom: '14px' }}>Kendi antika, mobilya ve sanat eserlerinizi güvenli vitrine eklemek için lütfen hesabınıza giriş yapın.</p>
                   <button onClick={() => setShowAuthModal(true)} style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '10px 18px', borderRadius: '6px', fontWeight: 'bold', fontSize: '0.85rem', cursor: 'pointer' }}>Giriş Yap / Kayıt Ol</button>
                 </div>
               )}
 
-              <h2 style={{ fontSize: '1.1rem', marginBottom: '4px', color: '#111827', fontWeight: 'bold' }}>Antika veya Tarihi Eser İlanı Yükle</h2>
-              <p style={{ fontSize: '0.78rem', color: '#6b7280', marginBottom: '14px' }}>Telefon ve IBAN numaralarınız alıcılara kesinlikle gösterilmez, işlemler havuz sistemiyle yapılır.</p>
+              <h2 style={{ fontSize: '1.1rem', marginBottom: '4px', color: '#111827', fontWeight: 'bold' }}>Antika veya Sanat Eseri İlanı Yükle</h2>
+              <p style={{ fontSize: '0.78rem', color: '#6b7280', marginBottom: '14px' }}>Telefon ve IBAN numaralarınız alıcılara kesinlikle gösterilmez, işlemler güvenli havuz sistemiyle yapılır.</p>
               
               <form onSubmit={triggerListingProcess} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <input type="text" placeholder="Eser / Antika Adı" value={title} onChange={(e) => setTitle(e.target.value)} required style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.88rem', boxSizing: 'border-box' }} />
+                <input type="text" placeholder="Eser / Ürün Adı" value={title} onChange={(e) => setTitle(e.target.value)} required style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.88rem', boxSizing: 'border-box' }} />
                 
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   <div style={{ flex: 1, minWidth: '140px' }}>
-                    <label style={{ fontSize: '0.72rem', color: '#4b5563', display: 'block', marginBottom: '4px' }}>Durum:</label>
+                    <label style={{ fontSize: '0.72rem', color: '#4b5563', display: 'block', marginBottom: '4px' }}>Kategori:</label>
                     <select value={isOriginal} onChange={(e) => setIsOriginal(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: 'white', fontSize: '0.88rem', boxSizing: 'border-box' }}>
-                      <option value="Orijinal">Orijinal Tarihi Eser</option>
-                      <option value="Antika / Dönem Parçası">Antika / Dönem Parçası</option>
+                      <option value="Mobilya">Mobilya</option>
+                      <option value="Aydınlatma">Aydınlatma</option>
+                      <option value="Dekorasyon">Dekorasyon</option>
+                      <option value="Numismatik">Numismatik</option>
+                      <option value="Tablo">Tablo</option>
+                      <option value="Antika / Diğer">Antika / Diğer</option>
                     </select>
                   </div>
                   <div style={{ flex: 1, minWidth: '140px' }}>
@@ -736,7 +742,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                <textarea placeholder="Eserin tarihi, dönemi ve detaylı açıklaması" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.88rem', boxSizing: 'border-box' }} />
+                <textarea placeholder="Ürünün dönemi, malzemesi ve detaylı açıklaması" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.88rem', boxSizing: 'border-box' }} />
 
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   <input type="text" placeholder="Telefonunuz (Alıcı Göremez)" value={phone} onChange={(e) => setPhone(e.target.value)} required style={{ flex: 1, minWidth: '140px', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.88rem', boxSizing: 'border-box' }} />
@@ -865,27 +871,45 @@ export default function Home() {
         )}
       </main>
 
-      {/* 🌟 KURUMSAL FOOTER (ALT BİLGİ ALANI) */}
-      <footer style={{ width: '100%', backgroundColor: '#1f2937', color: '#9ca3af', padding: '30px 20px', borderTop: '1px solid #374151', marginTop: '40px', boxSizing: 'border-box' }}>
-        <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px', boxSizing: 'border-box' }}>
-          <div>
-            <h4 style={{ color: 'white', fontSize: '1rem', fontWeight: 'bold', marginBottom: '8px' }}>🏛️ Efnan ArtBazaar</h4>
-            <p style={{ fontSize: '0.8rem', maxWidth: '300px', lineHeight: '1.4', color: '#d1d5db' }}>Tarihi eserlerin, antikaların ve orijinal sanat eserlerinin güvenli havuz ve kripto ödeme altyapısıyla buluştuğu dijital pazar yeri.</p>
+      {/* 🌟 PROFESYONEL KURUMSAL FOOTER (ALT BİLGİ ALANI) */}
+      <footer style={{ width: '100%', backgroundColor: '#111827', color: '#9ca3af', padding: '40px 20px 20px 20px', borderTop: '1px solid #374151', marginTop: '40px', boxSizing: 'border-box' }}>
+        <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '30px', boxSizing: 'border-box' }}>
+          
+          <div style={{ flex: 1, minWidth: '220px' }}>
+            <h4 style={{ color: 'white', fontSize: '1.05rem', fontWeight: 'bold', marginBottom: '10px' }}>🏛️ Efnan ArtBazaar</h4>
+            <p style={{ fontSize: '0.81rem', lineHeight: '1.5', color: '#d1d5db' }}>Antika mobilyaların, aydınlatmaların, dekoratif parçaların, numismatik eserlerin ve orijinal tabloların güvenli havuz ve kripto ödeme altyapısıyla buluştuğu dijital pazar yeri.</p>
           </div>
-          <div>
-            <h5 style={{ color: 'white', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '6px' }}>Güvenli Ödeme Altyapısı</h5>
-            <p style={{ fontSize: '0.78rem', marginBottom: '4px' }}>🏦 Türkiye İş Bankası Havuz Koruması</p>
-            <p style={{ fontSize: '0.78rem', marginBottom: '4px' }}>🪙 USDT & Bitcoin (BSC BEP20)</p>
+
+          <div style={{ flex: 1, minWidth: '180px' }}>
+            <h5 style={{ color: 'white', fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '10px' }}>Kategoriler</h5>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <li><span onClick={() => setSelectedCategory('Mobilya')} style={{ cursor: 'pointer', color: '#d1d5db' }}>🪑 Mobilya</span></li>
+              <li><span onClick={() => setSelectedCategory('Aydınlatma')} style={{ cursor: 'pointer', color: '#d1d5db' }}>💡 Aydınlatma</span></li>
+              <li><span onClick={() => setSelectedCategory('Dekorasyon')} style={{ cursor: 'pointer', color: '#d1d5db' }}>🏺 Dekorasyon</span></li>
+              <li><span onClick={() => setSelectedCategory('Numismatik')} style={{ cursor: 'pointer', color: '#d1d5db' }}>🪙 Numismatik</span></li>
+              <li><span onClick={() => setSelectedCategory('Tablo')} style={{ cursor: 'pointer', color: '#d1d5db' }}>🖼️ Tablo & Sanat</span></li>
+            </ul>
+          </div>
+
+          <div style={{ flex: 1, minWidth: '200px' }}>
+            <h5 style={{ color: 'white', fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '10px' }}>Güvenli Ödeme Altyapısı</h5>
+            <p style={{ fontSize: '0.78rem', marginBottom: '6px' }}>🏦 Türkiye İş Bankası Havuz Koruması</p>
+            <p style={{ fontSize: '0.78rem', marginBottom: '6px' }}>🪙 USDT & Bitcoin (BSC BEP20)</p>
             <p style={{ fontSize: '0.78rem' }}>🔒 %10 Emanetçi Komisyon Sistemi</p>
           </div>
-          <div>
-            <h5 style={{ color: 'white', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '6px' }}>İletişim & Destek</h5>
-            <p style={{ fontSize: '0.78rem', marginBottom: '4px' }}>👑 Yönetici: Yunus Aralı</p>
+
+          <div style={{ flex: 1, minWidth: '180px' }}>
+            <h5 style={{ color: 'white', fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '10px' }}>İletişim & Destek</h5>
+            <p style={{ fontSize: '0.78rem', marginBottom: '6px' }}>👑 Yönetici: Yunus Aralı</p>
+            <p style={{ fontSize: '0.78rem', marginBottom: '6px' }}>📍 Konum: Samsun, Türkiye</p>
             <p style={{ fontSize: '0.78rem' }}>📧 Destek: beyef.alfa@gmail.com</p>
           </div>
+
         </div>
-        <div style={{ maxWidth: '1000px', margin: '20px auto 0 auto', paddingTop: '15px', borderTop: '1px solid #374151', textAlign: 'center', fontSize: '0.75rem', color: '#6b7280' }}>
-          © 2026 Efnan ArtBazaar. Tüm hakları saklıdır.
+
+        <div style={{ maxWidth: '1000px', margin: '30px auto 0 auto', paddingTop: '20px', borderTop: '1px solid #374151', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', fontSize: '0.75rem', color: '#6b7280' }}>
+          <p>© 2026 Efnan ArtBazaar. Tüm hakları saklıdır.</p>
+          <p>Güvenli Müzayede ve Eser Pazaryeri</p>
         </div>
       </footer>
 
@@ -905,7 +929,7 @@ export default function Home() {
               <p style={{ fontSize: '0.85rem', color: '#4b5563', marginBottom: '16px', lineHeight: '1.4', backgroundColor: '#f9fafb', padding: '10px', borderRadius: '6px', border: '1px solid #e5e7eb' }}>{selectedArt.description}</p>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <span style={{ fontSize: '1.15rem', fontWeight: 'bold', color: '#059669' }}>{selectedArt.price}</span>
-                <span style={{ fontSize: '0.72rem', backgroundColor: '#d1fae5', color: '#065f46', padding: '3px 6px', borderRadius: '4px', fontWeight: 'bold' }}>{selectedArt.isOriginal}</span>
+                <span style={{ fontSize: '0.72rem', backgroundColor: '#eef2ff', color: '#4f46e5', padding: '3px 8px', borderRadius: '4px', fontWeight: 'bold' }}>{selectedArt.isOriginal}</span>
               </div>
               
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -941,10 +965,14 @@ export default function Home() {
 
               <div style={{ display: 'flex', gap: '8px' }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: '0.72rem', color: '#4b5563', display: 'block', marginBottom: '3px' }}>Durum:</label>
+                  <label style={{ fontSize: '0.72rem', color: '#4b5563', display: 'block', marginBottom: '3px' }}>Kategori:</label>
                   <select value={editIsOriginal} onChange={(e) => setEditIsOriginal(e.target.value)} style={{ width: '100%', padding: '9px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: 'white', fontSize: '0.85rem', boxSizing: 'border-box' }}>
-                    <option value="Orijinal">Orijinal Tarihi Eser</option>
-                    <option value="Antika / Dönem Parçası">Antika / Dönem Parçası</option>
+                    <option value="Mobilya">Mobilya</option>
+                    <option value="Aydınlatma">Aydınlatma</option>
+                    <option value="Dekorasyon">Dekorasyon</option>
+                    <option value="Numismatik">Numismatik</option>
+                    <option value="Tablo">Tablo</option>
+                    <option value="Antika / Diğer">Antika / Diğer</option>
                   </select>
                 </div>
                 <div style={{ flex: 1 }}>
